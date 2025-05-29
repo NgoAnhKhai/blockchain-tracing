@@ -1,7 +1,4 @@
 @import "tailwindcss";
 :root {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   font-family: 'IBM Plex Sans JP', sans-serif;
 }
