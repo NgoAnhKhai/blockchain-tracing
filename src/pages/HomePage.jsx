@@ -1,3 +1,4 @@
+// src/pages/HomePage.jsx (hoặc nơi bạn đang dùng HomePage)
 import React from "react";
 import {
   Box,
@@ -12,85 +13,60 @@ import {
   Chip,
   useTheme,
 } from "@mui/material";
-import ReactECharts from "echarts-for-react";
+
 import SearchingBar from "../components/searching/SearchingBar";
+import WeeklyAreaChart from "../components/charts/WeeklyAreaChart";
+import LargeAreaChart from "../components/charts/LargeAreaChart";
 
 const HomePage = () => {
   const theme = useTheme();
 
+  // Dữ liệu bảng Recent Transaction (giữ nguyên)
   const transactionData = [
-    { hash: "0x22f8...d123", from: "06fa...e07", to: "06fa...e07", amount: "3.36 ETH", time: "2 sec ago" },
-    { hash: "0x22f8...a523", from: "06fa...e07", to: "06fa...e07", amount: "1.35 ETH", time: "2 sec ago" },
-    { hash: "0x22f8...a623", from: "06fa...e07", to: "06fa...e07", amount: "1.53 ETH", time: "2 sec ago" },
+    {
+      hash: "0x22f8...d123",
+      from: "06fa...e07",
+      to: "06fa...e07",
+      amount: "3.36 ETH",
+      time: "2 sec ago",
+    },
+    {
+      hash: "0x22f8...a523",
+      from: "06fa...e07",
+      to: "06fa...e07",
+      amount: "1.35 ETH",
+      time: "2 sec ago",
+    },
+    {
+      hash: "0x22f8...a623",
+      from: "06fa...e07",
+      to: "06fa...e07",
+      amount: "1.53 ETH",
+      time: "2 sec ago",
+    },
   ];
 
+  // Dữ liệu bảng Risk Alerts (giữ nguyên)
   const alertData = [
-    { severity: "Medium", wallet: "06fa...e07", type: "Large Transaction", time: "2 hrs ago" },
-    { severity: "Medium", wallet: "06fa...e07", type: "Surge in Activity", time: "2 hrs ago" },
-    { severity: "High", wallet: "06fa...ea9", type: "Surge in Activity", time: "2 hrs ago" },
+    {
+      severity: "Medium",
+      wallet: "06fa...e07",
+      type: "Large Transaction",
+      time: "2 hrs ago",
+    },
+    {
+      severity: "Medium",
+      wallet: "06fa...e07",
+      type: "Surge in Activity",
+      time: "2 hrs ago",
+    },
+    {
+      severity: "High",
+      wallet: "06fa...ea9",
+      type: "Surge in Activity",
+      time: "2 hrs ago",
+    },
   ];
-
-  const lineChartOption = {
-    backgroundColor: theme.palette.background.paper,
-    tooltip: { trigger: "axis" },
-    xAxis: {
-      type: "category",
-      data: ["1", "2", "3", "4", "5", "6", "7"],
-      boundaryGap: false,
-      axisLine: { lineStyle: { color: theme.palette.text.primary } },
-      axisLabel: { color: theme.palette.text.primary },
-    },
-    yAxis: {
-      type: "value",
-      axisLine: { lineStyle: { color: theme.palette.text.primary } },
-      axisLabel: { color: theme.palette.text.primary },
-      splitLine: { lineStyle: { color: theme.palette.divider } },
-    },
-    series: [
-      {
-        data: [50, 80, 40, 120, 90, 60, 85],
-        type: "line",
-        smooth: true,
-        lineStyle: { color: "#00ff66", width: 2 },
-        areaStyle: { color: "rgba(0,255,102,0.1)" },
-        symbol: "none",
-      },
-    ],
-    grid: { left: 10, right: 10, bottom: 20, top: 30, containLabel: true },
-  };
-
-  const areaChartOption = {
-    backgroundColor: theme.palette.background.paper,
-    tooltip: { trigger: "axis" },
-    xAxis: {
-      type: "category",
-      data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      boundaryGap: false,
-      axisLine: { lineStyle: { color: theme.palette.text.primary } },
-      axisLabel: { color: theme.palette.text.primary },
-    },
-    yAxis: {
-      type: "value",
-      axisLine: { lineStyle: { color: theme.palette.text.primary } },
-      axisLabel: { color: theme.palette.text.primary },
-      splitLine: { lineStyle: { color: theme.palette.divider } },
-    },
-    series: [
-      {
-        data: [10, 15, 30, 40, 60, 50, 70],
-        type: "line",
-        smooth: true,
-        symbol: "none",
-        lineStyle: { color: "#ff4d88" },
-        areaStyle: {
-          color: theme.palette.mode === 'dark'
-            ? 'rgba(255, 77, 136, 0.3)'
-            : 'rgba(255, 77, 136, 0.4)',
-        },
-      },
-    ],
-    grid: { left: 10, right: 10, bottom: 20, top: 30, containLabel: true },
-  };
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -99,28 +75,36 @@ const HomePage = () => {
         <SearchingBar />
       </Box>
 
-      {/* Row 1: Line Chart + Area Chart */}
+      {/* Row 1: Large Area Chart + Weekly Area Chart */}
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+        {/* Card 1: Lớn */}
         <Card sx={{ flex: 1, backgroundColor: theme.palette.background.paper }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>Transaction Overview</Typography>
-            <ReactECharts option={lineChartOption} style={{ height: 200 }} />
+            <Typography variant="h6" gutterBottom>
+              Transaction Overview
+            </Typography>
+            <LargeAreaChart />
           </CardContent>
         </Card>
 
+        {/* Card 2: 7 ngày */}
         <Card sx={{ flex: 1, backgroundColor: theme.palette.background.paper }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>Risk Alerts (Last 7 Days)</Typography>
-            <ReactECharts option={areaChartOption} style={{ height: 200 }} />
+            <Typography variant="h6" gutterBottom>
+              Risk Alerts (Last 7 Days)
+            </Typography>
+            <WeeklyAreaChart />
           </CardContent>
         </Card>
       </Box>
 
-      {/* Row 2: Table Transaction + Table Risk */}
+      {/* Row 2: Recent Transaction + Risk Alerts Table */}
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
         <Card sx={{ flex: 2, backgroundColor: theme.palette.background.paper }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>Recent Transaction</Typography>
+            <Typography variant="h6" gutterBottom>
+              Recent Transaction
+            </Typography>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -148,7 +132,9 @@ const HomePage = () => {
 
         <Card sx={{ flex: 1, backgroundColor: theme.palette.background.paper }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>Risk Alerts</Typography>
+            <Typography variant="h6" gutterBottom>
+              Risk Alerts
+            </Typography>
             <Table size="small">
               <TableHead>
                 <TableRow>
