@@ -1,4 +1,4 @@
-// src/pages/TraceWalletPage.jsx
+
 import React from "react";
 import {
   Box,
@@ -90,10 +90,6 @@ const TraceWalletPage = () => {
             sx={{ flex: 1, backgroundColor: theme.palette.background.paper }}
           >
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Wallet Overview
-              </Typography>
-
               {/* Dòng 3 card nhỏ */}
               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", my: 1 }}>
                 <Card

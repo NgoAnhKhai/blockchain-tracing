@@ -1,4 +1,4 @@
-// src/pages/TransactionsPage.jsx
+
 import React, { useState } from "react";
 import {
   Box,
@@ -94,17 +94,13 @@ const TransactionsPage = () => {
             PHẦN TÌM KIẾM (SearchingBar)
         ======================== */}
         <Box>
-          {/* Thay vì TextField, dùng component tìm kiếm riêng của bạn */}
           <SearchingBar />
         </Box>
 
-        {/* =======================
-            PHẦN FILTER DROPDOWNS (From / To / Token / Time)
-        ======================== */}
         <Card
           sx={{
             backgroundColor: theme.palette.background.paper,
-            borderRadius: 1, // bo góc nhẹ, số càng lớn bo càng tròn
+            borderRadius: 1, 
           }}
         >
           <CardContent>

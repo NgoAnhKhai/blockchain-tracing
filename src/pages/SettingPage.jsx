@@ -30,7 +30,6 @@ const SettingPage = () => {
   const [notifUnusual, setNotifUnusual] = useState(false);
   const [passphrase, setPassphrase] = useState("");
 
-  // Giả lập lưu darkMode vào localStorage, khi component mount, nếu có localStorage thì override state
   useEffect(() => {
     const savedMode = localStorage.getItem("darkMode");
     if (savedMode !== null) {
@@ -38,10 +37,9 @@ const SettingPage = () => {
     }
   }, []);
 
-  // Khi darkMode thay đổi, cập nhật theme (thông thường bạn phải lift state lên App.jsx hoặc context, demo ở đây chỉ set localStorage)
+ 
   useEffect(() => {
     localStorage.setItem("darkMode", darkMode.toString());
-    // Nếu bạn có context làm theme, hãy gọi hàm toggleTheme(darkMode)
   }, [darkMode]);
 
   // ----------------------
@@ -107,9 +105,6 @@ const SettingPage = () => {
           gap: 3,
         }}
       >
-        <Typography variant="h5" gutterBottom>
-          Settings
-        </Typography>
 
         {/* === 1. Profile Settings === */}
         <Card
@@ -119,9 +114,6 @@ const SettingPage = () => {
           }}
         >
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Profile Settings
-            </Typography>
             <Box
               sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
             >

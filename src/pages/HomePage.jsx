@@ -1,4 +1,4 @@
-// src/pages/HomePage.jsx (hoặc nơi bạn đang dùng HomePage)
+
 import React from "react";
 import {
   Box,
@@ -71,13 +71,12 @@ const HomePage = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {/* Searching Bar */}
-      <Box sx={{ display: "flex" }}>
+      <Box sx={{ display: "flex", }}>
         <SearchingBar />
       </Box>
 
       {/* Row 1: Large Area Chart + Weekly Area Chart */}
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-        {/* Card 1: Lớn */}
         <Card sx={{ flex: 1, backgroundColor: theme.palette.background.paper }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>

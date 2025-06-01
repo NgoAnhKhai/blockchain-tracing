@@ -30,7 +30,6 @@ const MainLayout = () => {
           color: theme.palette.text.primary,
           transition: 'background-color 0.4s ease',
           overflowY: 'auto',
-          height: '100vh',
         }}
       >
         <Outlet />

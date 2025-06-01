@@ -1,8 +1,6 @@
 import React, { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 import { useTheme } from "@mui/material";
-
-// Hàm helper để sinh dữ liệu area chart (ngày và giá trị) giống ví dụ ECharts
 function generateLargeAreaData(numPoints) {
   // Bắt đầu từ ngày 3/10/1968 (mỗi lần cộng thêm oneDay)
   let baseTimestamp = new Date(1968, 9, 3).getTime(); // Tháng 9 = tháng 10 vì JS đếm 0-based

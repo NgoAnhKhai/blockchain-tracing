@@ -1,4 +1,4 @@
-// src/components/Charts/DonutChartAlerts.jsx
+
 import React, { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 import { useTheme } from "@mui/material";
@@ -7,8 +7,6 @@ import { useTheme } from "@mui/material";
 const sampleAlertTypes = [
   { value: 35, name: "Large Transaction" },
   { value: 24, name: "Surge in Activity" },
-  { value: 33, name: "Unusual Behavior" },
-  { value: 18, name: "New Wallet Interaction" },
   { value: 10, name: "Other Alerts" },
 ];
 

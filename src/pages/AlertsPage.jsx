@@ -1,4 +1,4 @@
-// src/pages/AlertsPage.jsx
+
 import React, { useState } from "react";
 import {
   Box,
@@ -71,7 +71,6 @@ const AlertsPage = () => {
       txHash: "0x92...d123",
       time: "1 min ago",
     },
-    // Bạn có thể thêm nhiều dòng sample hơn
   ];
 
   // ----------------------
@@ -86,10 +85,6 @@ const AlertsPage = () => {
   const handleTypeChange = (e) => setFilterType(e.target.value);
   const handleTimeChange = (e) => setFilterTime(e.target.value);
   const handleWalletChange = (e) => setFilterWallet(e.target.value);
-
-  // Khi cần lọc 실제, bạn có thể apply filter to sampleAlerts bằng filterSeverity/filterType/etc.
-  // Hiện tại để demo, mình chưa áp dụng lọc, bạn tự bind logic sau.
-
   return (
     <Box
       sx={{
@@ -108,9 +103,6 @@ const AlertsPage = () => {
           gap: 2,
         }}
       >
-        <Typography variant="h5" sx={{ mb: 1 }}>
-          Alerts
-        </Typography>
 
         {/* =======================
             PHẦN FILTER (Severity / Type / Time / Wallet Search)

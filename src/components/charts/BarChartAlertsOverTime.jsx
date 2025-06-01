@@ -1,4 +1,4 @@
-// src/components/Charts/BarChartAlertsOverTime.jsx
+
 import React, { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 import { useTheme } from "@mui/material";
