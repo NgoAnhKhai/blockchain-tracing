@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Card,
@@ -10,43 +9,53 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  IconButton,
   Chip,
   useTheme,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
-import SearchingBar from "../components/searching/SearchingBar";
-import WeeklyAreaChart from "../components/charts/WeeklyAreaChart";
+import WalletSelector from "../components/WalletSelector";
 import LargeAreaChart from "../components/charts/LargeAreaChart";
+import WeeklyAreaChart from "../components/charts/WeeklyAreaChart";
+import { getTxList } from "../services/GetPopularWallet";
 
 const HomePage = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
 
-  // Dữ liệu bảng Recent Transaction (giữ nguyên)
-  const transactionData = [
-    {
-      hash: "0x22f8...d123",
-      from: "06fa...e07",
-      to: "06fa...e07",
-      amount: "3.36 ETH",
-      time: "2 sec ago",
-    },
-    {
-      hash: "0x22f8...a523",
-      from: "06fa...e07",
-      to: "06fa...e07",
-      amount: "1.35 ETH",
-      time: "2 sec ago",
-    },
-    {
-      hash: "0x22f8...a623",
-      from: "06fa...e07",
-      to: "06fa...e07",
-      amount: "1.53 ETH",
-      time: "2 sec ago",
-    },
-  ];
+  const [selectedWallet, setSelectedWallet] = useState(null);
+  const [txList, setTxList] = useState([]);
 
-  // Dữ liệu bảng Risk Alerts (giữ nguyên)
+  useEffect(() => {
+    if (!selectedWallet) {
+      setSelectedWallet({
+        label: "Vitalik Buterin",
+        address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+      });
+    }
+  }, [selectedWallet]);
+
+  useEffect(() => {
+    if (selectedWallet) {
+      getTxList(selectedWallet.address).then((txs) => {
+        setTxList(txs);
+      });
+    }
+  }, [selectedWallet]);
+
+  // Lọc 1 năm gần nhất
+  const oneYearAgo = Date.now() - 365 * 24 * 3600 * 1000;
+  const filteredTx = useMemo(
+    () => txList.filter((tx) => tx.timeStamp * 1000 >= oneYearAgo),
+    [txList]
+  );
+
+  const handleExpand = (route) => {
+    navigate(`${route}?address=${selectedWallet.address}`);
+  };
+
   const alertData = [
     {
       severity: "Medium",
@@ -69,41 +78,54 @@ const HomePage = () => {
   ];
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      {/* Searching Bar */}
-      <Box sx={{ display: "flex", }}>
-        <SearchingBar />
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      {/* Selector */}
+      <Box sx={{ px: 3, pt: 1, display: "flex", justifyContent: "flex-end" }}>
+        <WalletSelector
+          selected={selectedWallet}
+          onSelect={setSelectedWallet}
+        />
       </Box>
 
-      {/* Row 1: Large Area Chart + Weekly Area Chart */}
+      {/* Charts */}
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-        <Card sx={{ flex: 1, backgroundColor: theme.palette.background.paper }}>
+        <Card sx={{ flex: 1, bgcolor: theme.palette.background.paper }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Transaction Overview
-            </Typography>
-            <LargeAreaChart />
+            <LargeAreaChart txList={txList} />
           </CardContent>
         </Card>
-
-        {/* Card 2: 7 ngày */}
-        <Card sx={{ flex: 1, backgroundColor: theme.palette.background.paper }}>
+        <Card sx={{ flex: 1, bgcolor: theme.palette.background.paper }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Risk Alerts (Last 7 Days)
-            </Typography>
-            <WeeklyAreaChart />
+            <WeeklyAreaChart txList={txList} />
           </CardContent>
         </Card>
       </Box>
 
-      {/* Row 2: Recent Transaction + Risk Alerts Table */}
+      {/* Recent Transactions & Risk Alerts */}
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-        <Card sx={{ flex: 2, backgroundColor: theme.palette.background.paper }}>
+        <Card
+          sx={{
+            flex: 2,
+            position: "relative",
+            bgcolor: theme.palette.background.paper,
+          }}
+        >
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Recent Transaction
-            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Typography variant="h6">Recent Transactions</Typography>
+              <IconButton
+                size="small"
+                onClick={() => handleExpand("/transactions")}
+              >
+                <OpenInNewIcon />
+              </IconButton>
+            </Box>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -115,13 +137,25 @@ const HomePage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {transactionData.map((tx, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>{tx.hash}</TableCell>
-                    <TableCell>{tx.from}</TableCell>
-                    <TableCell>{tx.to}</TableCell>
-                    <TableCell>{tx.amount}</TableCell>
-                    <TableCell>{tx.time}</TableCell>
+                {filteredTx.map((tx, idx) => (
+                  <TableRow
+                    key={idx}
+                    hover
+                    sx={{
+                      "&:nth-of-type(odd)": {
+                        backgroundColor: theme.palette.action.hover,
+                      },
+                    }}
+                  >
+                    <TableCell>{tx.hash.slice(0, 12)}…</TableCell>
+                    <TableCell>{tx.from.slice(0, 10)}…</TableCell>
+                    <TableCell>{tx.to?.slice(0, 10)}…</TableCell>
+                    <TableCell>
+                      {(parseFloat(tx.value) / 1e18).toFixed(4)} ETH
+                    </TableCell>
+                    <TableCell>
+                      {new Date(tx.timeStamp * 1000).toLocaleString()}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -129,11 +163,26 @@ const HomePage = () => {
           </CardContent>
         </Card>
 
-        <Card sx={{ flex: 1, backgroundColor: theme.palette.background.paper }}>
+        <Card
+          sx={{
+            flex: 1,
+            position: "relative",
+            bgcolor: theme.palette.background.paper,
+          }}
+        >
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Risk Alerts
-            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Typography variant="h6">Risk Alerts</Typography>
+              <IconButton size="small" onClick={() => handleExpand("/alerts")}>
+                <OpenInNewIcon />
+              </IconButton>
+            </Box>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -145,7 +194,14 @@ const HomePage = () => {
               </TableHead>
               <TableBody>
                 {alertData.map((row, idx) => (
-                  <TableRow key={idx}>
+                  <TableRow
+                    key={idx}
+                    sx={{
+                      "&:nth-of-type(odd)": {
+                        backgroundColor: theme.palette.action.hover,
+                      },
+                    }}
+                  >
                     <TableCell>
                       <Chip
                         label={row.severity}

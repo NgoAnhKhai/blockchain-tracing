@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Box, ToggleButtonGroup, ToggleButton } from "@mui/material";
-import SearchingBar from "../components/searching/SearchingBar";
+import { Box } from "@mui/material";
 import ThreeGraphView from "../components/charts/ThreeGraphView";
 import D3GraphView from "../components/charts/D3GraphView";
 import RightSideBar from "../components/sidebar/RightSideBar";
+import { useViewMode } from "../context/ViewModeContext";
 
 export default function WalletGraphPage() {
-  const [viewMode, setViewMode] = useState("2d");
+  const { viewMode } = useViewMode();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -35,30 +35,6 @@ export default function WalletGraphPage() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      {/* Search Bar + Toggle */}
-      <Box
-        sx={{
-          flex: "0 0 auto",
-          display: "flex",
-          alignItems: "center",
-          px: 2,
-          py: 1,
-        }}
-      >
-        <SearchingBar />
-        <ToggleButtonGroup
-          size="small"
-          value={viewMode}
-          exclusive
-          onChange={(e, val) => val && setViewMode(val)}
-          sx={{ ml: 2 }}
-        >
-          <ToggleButton value="2d">2D</ToggleButton>
-          <ToggleButton value="3d">3D</ToggleButton>
-        </ToggleButtonGroup>
-      </Box>
-
-      {/* Main Graph View */}
       <Box sx={{ flex: 1, display: "flex", position: "relative" }}>
         {viewMode === "3d" ? (
           <ThreeGraphView onNodeClick={handleNodeClick} />
