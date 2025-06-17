@@ -1,45 +1,81 @@
+// src/components/WalletGraph.jsx
 import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
+import { useTheme } from "@mui/material";
 
-const WalletGraph = ({ data }) => {
+export default function WalletGraph({ data, width = 800, height = 600 }) {
+  const theme = useTheme();
   const ref = useRef();
 
   useEffect(() => {
-    const width = 1400;
-    const height = 900;
-
+    // 1) Clear & init SVG
     const svg = d3.select(ref.current);
-    svg.selectAll("*").remove(); // clear old
+    svg.selectAll("*").remove();
+    svg
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .style("background", theme.palette.background.default)
+      .style("cursor", "grab");
 
-    const container = svg
-      .attr("width", width)
-      .attr("height", height)
-      .append("g");
+    const container = svg.append("g");
 
     svg.call(
       d3
         .zoom()
-        .scaleExtent([0.1, 8])
+        .scaleExtent([0.2, 5])
         .on("zoom", (event) => {
           container.attr("transform", event.transform);
         })
     );
 
-    // === Build nodes & links ===
+    // 2) defs: drop shadow + gradients
+    const defs = container.append("defs");
+
+    // 2a) drop shadow, màu theo mode
+    defs
+      .append("filter")
+      .attr("id", "drop-shadow")
+      .append("feDropShadow")
+      .attr("dx", 0)
+      .attr("dy", 4)
+      .attr("stdDeviation", 8)
+      .attr("flood-color", theme.palette.mode === "dark" ? "#000" : "#333")
+      .attr("flood-opacity", 0.5);
+
+    // 2b) gradient trung tâm
+    const gradCenter = defs.append("radialGradient").attr("id", "grad-center");
+    gradCenter
+      .append("stop")
+      .attr("offset", "0%")
+      .attr("stop-color", "#BB86FC");
+    gradCenter
+      .append("stop")
+      .attr("offset", "100%")
+      .attr("stop-color", "#6200EE");
+
+    // 2c) gradient vệ tinh
+    const gradChild = defs.append("radialGradient").attr("id", "grad-child");
+    gradChild.append("stop").attr("offset", "0%").attr("stop-color", "#FF77A9");
+    gradChild
+      .append("stop")
+      .attr("offset", "100%")
+      .attr("stop-color", "#FF006D");
+
+    // 3) Build nodes & links
     const nodesMap = new Map();
     const links = [];
-
     data.forEach(({ from, to }) => {
-      if (!nodesMap.has(from))
-        nodesMap.set(from, { id: from, isParent: true, group: from });
-      if (!nodesMap.has(to)) nodesMap.set(to, { id: to, group: from });
+      if (!nodesMap.has(from)) nodesMap.set(from, { id: from, isParent: true });
+      if (!nodesMap.has(to)) nodesMap.set(to, { id: to, isParent: false });
       links.push({ source: from, target: to });
     });
-
     const nodes = Array.from(nodesMap.values());
+    // random initial position
+    nodes.forEach((d) => {
+      d.x = Math.random() * width;
+      d.y = Math.random() * height;
+    });
 
-    const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
-
+    // 4) Force simulation
     const simulation = d3
       .forceSimulation(nodes)
       .force(
@@ -47,39 +83,85 @@ const WalletGraph = ({ data }) => {
         d3
           .forceLink(links)
           .id((d) => d.id)
-          .distance(80)
+          .distance(() => 100 + Math.random() * 50)
+          .strength(0.6)
       )
-      .force("charge", d3.forceManyBody().strength(-200))
-      .force("center", d3.forceCenter(width / 2, height / 2));
+      // giữ parent ở giữa
+      .force(
+        "x",
+        d3.forceX(width / 2).strength((d) => (d.isParent ? 1 : 0))
+      )
+      .force(
+        "y",
+        d3.forceY(height / 2).strength((d) => (d.isParent ? 1 : 0))
+      )
+      .force(
+        "collide",
+        d3
+          .forceCollide()
+          .radius((d) => (d.isParent ? 40 : 20))
+          .strength(0.8)
+      );
 
+    // 5) Draw links
+    const linkColor =
+      theme.palette.mode === "dark"
+        ? "rgba(255,255,255,0.2)"
+        : "rgba(0,0,0,0.1)";
     const link = container
       .append("g")
-      .attr("stroke", "#ccc")
+      .attr("stroke", linkColor)
       .selectAll("line")
       .data(links)
       .join("line")
-      .attr("stroke-opacity", 0.4);
+      .attr("stroke-width", 1)
+      .attr("stroke-linecap", "round");
 
+    // 6) Draw nodes
     const node = container
       .append("g")
       .selectAll("circle")
       .data(nodes)
       .join("circle")
-      .attr("r", (d) => (d.isParent ? 16 : 6))
-      .attr("fill", (d) => colorScale(d.group))
-      .call(drag(simulation));
+      .attr("r", (d) => (d.isParent ? 20 : 8))
+      .attr("fill", (d) =>
+        d.isParent ? "url(#grad-center)" : "url(#grad-child)"
+      )
+      .attr("filter", "url(#drop-shadow)")
+      .call(
+        d3
+          .drag()
+          .on("start", (event, d) => {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+          })
+          .on("drag", (event, d) => {
+            d.fx = event.x;
+            d.fy = event.y;
+          })
+          .on("end", (event, d) => {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+          })
+      );
 
-    const label = container
-      .append("g")
-      .selectAll("text")
-      .data(nodes.filter((n) => n.isParent))
-      .join("text")
-      .text((d) => d.id.slice(0, 6) + "...")
-      .attr("font-size", 10)
-      .attr("fill", "#444")
-      .attr("x", 10)
-      .attr("y", 4);
+    node
+      .on("mouseover", function (event, d) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr("r", d.isParent ? 26 : 12);
+      })
+      .on("mouseout", function (event, d) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr("r", d.isParent ? 20 : 8);
+      });
 
+    // 7) Tick
     simulation.on("tick", () => {
       link
         .attr("x1", (d) => d.source.x)
@@ -88,31 +170,10 @@ const WalletGraph = ({ data }) => {
         .attr("y2", (d) => d.target.y);
 
       node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
-
-      label.attr("x", (d) => d.x + 10).attr("y", (d) => d.y);
     });
 
-    function drag(simulation) {
-      return d3
-        .drag()
-        .on("start", (event, d) => {
-          if (!event.active) simulation.alphaTarget(0.3).restart();
-          d.fx = d.x;
-          d.fy = d.y;
-        })
-        .on("drag", (event, d) => {
-          d.fx = event.x;
-          d.fy = event.y;
-        })
-        .on("end", (event, d) => {
-          if (!event.active) simulation.alphaTarget(0);
-          d.fx = null;
-          d.fy = null;
-        });
-    }
-  }, [data]);
+    return () => simulation.stop();
+  }, [data, width, height, theme]);
 
-  return <svg ref={ref} />;
-};
-
-export default WalletGraph;
+  return <svg ref={ref} style={{ width: "100%", height: "100%" }} />;
+}

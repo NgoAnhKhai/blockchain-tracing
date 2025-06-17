@@ -21,6 +21,8 @@ import LargeAreaChart from "../components/charts/LargeAreaChart";
 import WeeklyAreaChart from "../components/charts/WeeklyAreaChart";
 import { getTxList } from "../services/GetPopularWallet";
 
+const RECENT_COUNT = 8; // Số giao dịch hiển thị
+
 const HomePage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -28,6 +30,7 @@ const HomePage = () => {
   const [selectedWallet, setSelectedWallet] = useState(null);
   const [txList, setTxList] = useState([]);
 
+  // Khởi mặc định wallet
   useEffect(() => {
     if (!selectedWallet) {
       setSelectedWallet({
@@ -37,6 +40,7 @@ const HomePage = () => {
     }
   }, [selectedWallet]);
 
+  // Lấy danh sách tx khi wallet thay đổi
   useEffect(() => {
     if (selectedWallet) {
       getTxList(selectedWallet.address).then((txs) => {
@@ -51,6 +55,15 @@ const HomePage = () => {
     () => txList.filter((tx) => tx.timeStamp * 1000 >= oneYearAgo),
     [txList]
   );
+
+  // (Tuỳ chọn) sort giảm dần theo thời gian
+  const sortedTx = useMemo(
+    () => [...filteredTx].sort((a, b) => b.timeStamp - a.timeStamp),
+    [filteredTx]
+  );
+
+  // Chỉ lấy RECENT_COUNT giao dịch đầu
+  const recentTx = useMemo(() => sortedTx.slice(0, RECENT_COUNT), [sortedTx]);
 
   const handleExpand = (route) => {
     navigate(`${route}?address=${selectedWallet.address}`);
@@ -89,12 +102,12 @@ const HomePage = () => {
 
       {/* Charts */}
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-        <Card sx={{ flex: 1, bgcolor: theme.palette.background.paper }}>
+        <Card sx={{ flex: 1, backgroundColor: "rgba(70, 14, 82, 0.08)" }}>
           <CardContent>
             <LargeAreaChart txList={txList} />
           </CardContent>
         </Card>
-        <Card sx={{ flex: 1, bgcolor: theme.palette.background.paper }}>
+        <Card sx={{ flex: 1, backgroundColor: "rgba(70, 14, 82, 0.08)" }}>
           <CardContent>
             <WeeklyAreaChart txList={txList} />
           </CardContent>
@@ -103,11 +116,12 @@ const HomePage = () => {
 
       {/* Recent Transactions & Risk Alerts */}
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+        {/* Recent Transactions */}
         <Card
           sx={{
             flex: 2,
             position: "relative",
-            bgcolor: theme.palette.background.paper,
+            backgroundColor: "rgba(70, 14, 82, 0.08)",
           }}
         >
           <CardContent>
@@ -137,7 +151,7 @@ const HomePage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredTx.map((tx, idx) => (
+                {recentTx.map((tx, idx) => (
                   <TableRow
                     key={idx}
                     hover
@@ -163,11 +177,12 @@ const HomePage = () => {
           </CardContent>
         </Card>
 
+        {/* Risk Alerts */}
         <Card
           sx={{
             flex: 1,
             position: "relative",
-            bgcolor: theme.palette.background.paper,
+            backgroundColor: "rgba(70, 14, 82, 0.08)",
           }}
         >
           <CardContent>

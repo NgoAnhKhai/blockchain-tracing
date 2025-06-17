@@ -1,4 +1,3 @@
-// src/pages/TraceAllWalletFollowPage.jsx
 import React, { useState } from "react";
 import {
   Box,
@@ -18,13 +17,10 @@ import {
   TextField,
   InputAdornment,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
 import WalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import Sparkline from "../components/charts/Sparkline";
-import NetworkGraph from "../components/charts/NetworkGraph";
 import ActivityHeatmap from "../components/charts/ActivityHeatmap";
 
-// Giả lập data
 const followersData = [
   {
     address: "0x7f4d...05c5",
@@ -86,141 +82,122 @@ export default function TraceAllWalletFollowPage() {
       }}
     >
       {/* Summary Cards */}
-      <Grid container spacing={2} mb={2}>
-        {[
-          { label: "Following", value: totalFollowing, color: "#ff4d88" },
-          { label: "Transactions", value: `${totalTx}K`, color: "#bb86fc" },
-          { label: "Activity Heatmap", comp: <ActivityHeatmap /> },
-          { label: "Active Time", value: activeTime },
-        ].map((card, i) => (
-          <Grid item xs={12} sm={6} md={3} key={i}>
-            <Card
-              sx={{
-                bgcolor: theme.palette.background.paper,
-                borderRadius: 2,
-                height: 140,
-                width: 300,
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                justifyContent: "center",
-              }}
-            >
-              <CardContent
-                sx={{
-                  textAlign: "center",
-                  p: 2,
-                }}
-              >
-                {card.comp ? (
-                  <>
-                    {/* Heatmap: label trên, comp dưới */}
-                    <Typography
-                      variant="subtitle2"
-                      color="textSecondary"
-                      gutterBottom
-                    >
-                      {card.label}
-                    </Typography>
-                    {card.comp}
-                  </>
-                ) : (
-                  <>
-                    {/* Các thẻ khác: value trên, label dưới */}
-                    <Typography
-                      variant="h3" // to hơn h5
-                      color={card.color || theme.palette.text.primary}
-                      gutterBottom
-                    >
-                      {card.value}
-                    </Typography>
-                    <Typography variant="subtitle2" color="textSecondary">
-                      {card.label}
-                    </Typography>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      {/* Network + Mini Table */}
-      <Grid container spacing={2} mb={2}>
-        <Grid item xs={12} md={4}>
+      <Grid
+        sx={{
+          display: "flex",
+          justifyContent: "space-around",
+          flexWrap: "wrap",
+          gap: 2,
+          mb: 2,
+        }}
+      >
+        {/* Following */}
+        <Grid item xs={12} sm={6} md={3}>
           <Card
             sx={{
-              bgcolor: theme.palette.background.paper,
+              backgroundColor: "rgba(70,14,82,0.08)",
               borderRadius: 2,
-              height: "100%",
-              width: 500,
+              height: 140,
+              width: 200,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            <CardContent sx={{ p: 1 }}>
-              <NetworkGraph />
+            <CardContent sx={{ textAlign: "center", p: 2 }}>
+              <Typography variant="h3" color="#ff4d88" gutterBottom>
+                {totalFollowing}
+              </Typography>
+              <Typography variant="subtitle2" color="textSecondary">
+                Following
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={8}>
+
+        {/* Transactions */}
+        <Grid item xs={12} sm={6} md={3}>
           <Card
-            sx={{ bgcolor: theme.palette.background.paper, borderRadius: 2 }}
+            sx={{
+              backgroundColor: "rgba(70,14,82,0.08)",
+              borderRadius: 2,
+              height: 140,
+              width: 200,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            <CardContent>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Last Active</TableCell>
-                    <TableCell>Sparkline</TableCell>
-                    <TableCell align="right">Action</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filtered.slice(0, 4).map((row, idx) => (
-                    <TableRow key={row.address}>
-                      <TableCell>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <WalletIcon
-                            fontSize="small"
-                            sx={{ color: "#bb86fc" }}
-                          />
-                          {row.address}
-                        </Box>
-                      </TableCell>
-                      <TableCell>{row.lastActive}</TableCell>
-                      <TableCell>
-                        <Sparkline data={row.sparkData} color="#ff4d88" />
-                      </TableCell>
-                      <TableCell align="right">
-                        <Button
-                          size="small"
-                          variant={row.followed ? "outlined" : "contained"}
-                          sx={{
-                            color: row.followed ? "#ff4d88" : "#fff",
-                            borderColor: "#ff4d88",
-                            "&:hover": {
-                              backgroundColor: "rgba(255,77,136,0.1)",
-                            },
-                          }}
-                          onClick={() => toggleFollow(idx)}
-                        >
-                          {row.followed ? "Unfollow" : "Follow"}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <CardContent sx={{ textAlign: "center", p: 2 }}>
+              <Typography variant="h3" color="#bb86fc" gutterBottom>
+                {`${totalTx}K`}
+              </Typography>
+              <Typography variant="subtitle2" color="textSecondary">
+                Transactions
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Activity Heatmap */}
+        <Grid item xs={12} sm={6} md={3}>
+          <Card
+            sx={{
+              backgroundColor: "rgba(70,14,82,0.08)",
+              borderRadius: 2,
+              height: 140,
+              width: 200,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <CardContent sx={{ textAlign: "center", p: 2 }}>
+              <Typography
+                variant="subtitle2"
+                color="textSecondary"
+                gutterBottom
+              >
+                Activity Heatmap
+              </Typography>
+              <ActivityHeatmap />
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Active Time */}
+        <Grid item xs={12} sm={6} md={3}>
+          <Card
+            sx={{
+              backgroundColor: "rgba(70,14,82,0.08)",
+              borderRadius: 2,
+              height: 140,
+              width: 200,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <CardContent sx={{ textAlign: "center", p: 2 }}>
+              <Typography variant="h3" color="textPrimary" gutterBottom>
+                {activeTime}
+              </Typography>
+              <Typography variant="subtitle2" color="textSecondary">
+                Active Time
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
       {/* Full Table */}
-      <Divider sx={{ mb: 2, borderColor: theme.palette.divider }} />
-      <Card sx={{ bgcolor: theme.palette.background.paper, borderRadius: 2 }}>
+      <Divider sx={{ mb: 2 }} />
+      <Card
+        sx={{
+          backgroundColor: "rgba(70, 14, 82, 0.08)",
+          borderRadius: 2,
+        }}
+      >
         <CardContent>
           <Table size="small">
             <TableHead>

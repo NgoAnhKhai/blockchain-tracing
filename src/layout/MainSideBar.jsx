@@ -36,7 +36,6 @@ const MainSideBar = () => {
   const { pathname } = useLocation();
   const { isDark, toggleTheme } = useContext(ThemeContext);
 
-  // Màu tím đồng nhất
   const activeColor = "#ff4d88";
 
   return (
@@ -48,7 +47,6 @@ const MainSideBar = () => {
         height: "100vh",
         display: "flex",
         flexDirection: "column",
-        position: "relative",
       }}
     >
       {/* Header */}
@@ -76,8 +74,8 @@ const MainSideBar = () => {
               sx={{
                 mb: 1,
                 mx: 1,
-                width: 210,
-                borderRadius: 12,
+                borderRadius: 15,
+                width: 200,
                 cursor: "pointer",
                 transition: "background-color 0.3s ease",
                 bgcolor: isActive
@@ -85,12 +83,12 @@ const MainSideBar = () => {
                   : "transparent",
                 "&:hover": {
                   bgcolor: theme.palette.action.hover,
-                  borderRadius: 12,
                 },
               }}
             >
               <ListItemIcon
                 sx={{
+                  minWidth: 40,
                   color: isActive ? activeColor : theme.palette.text.secondary,
                 }}
               >
@@ -101,7 +99,7 @@ const MainSideBar = () => {
                 primaryTypographyProps={{
                   fontWeight: isActive ? 600 : 500,
                   fontSize: 14,
-                  color: isActive ? activeColor : theme.palette.text.secondary,
+                  color: theme.palette.text.primary,
                 }}
               />
             </ListItem>

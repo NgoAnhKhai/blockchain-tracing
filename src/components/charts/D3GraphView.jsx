@@ -5,7 +5,7 @@ import { generateClusteredWallets } from "../../utils/generateClusteredWallets";
 import WalletGraph from "./WalletGraph";
 
 export default function D3GraphView() {
-  const data = useMemo(() => generateClusteredWallets(5, 20), []);
+  const data = useMemo(() => generateClusteredWallets(1, 100), []);
   return (
     <Box sx={{ flex: 1 }}>
       <WalletGraph data={data} />

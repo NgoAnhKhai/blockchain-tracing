@@ -5,7 +5,7 @@ import { randomHexAddress } from "./generateNodes";
  */
 export function generateClusteredWallets(
   clusterCount = 5,
-  childrenPerCluster = 30
+  childrenPerCluster = 100
 ) {
   const data = [];
 
