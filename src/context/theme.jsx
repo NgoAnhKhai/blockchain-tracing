@@ -11,13 +11,11 @@ export const ThemeContext = createContext();
 const ThemeProvider = ({ children }) => {
   const [isDark, setIsDark] = useState(true);
 
-  // Load theme từ localStorage
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     if (saved) setIsDark(saved === "dark");
   }, []);
 
-  // Lưu theme vào localStorage
   useEffect(() => {
     localStorage.setItem("theme", isDark ? "dark" : "light");
   }, [isDark]);
@@ -30,8 +28,13 @@ const ThemeProvider = ({ children }) => {
         palette: {
           mode: isDark ? "dark" : "light",
           background: {
-            default: isDark ? "#222" : "#f5f5f5",
-            paper: isDark ? "#222" : "#fff",
+            // <-- đổi thành màu #1F232C như mockup
+            default: isDark ? "#0F111A" : "#f5f5f5",
+            paper: isDark ? "#0F111A" : "#ffffff",
+          },
+          // (tuỳ chọn) bạn có thể điều chỉnh text.primary để sáng hơn trên nền này
+          text: {
+            primary: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.87)",
           },
         },
         components: {

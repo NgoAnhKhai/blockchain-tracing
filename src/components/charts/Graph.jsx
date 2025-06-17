@@ -1,9 +1,13 @@
-// src/components/charts/Graph.jsx
 import React, { useRef, useState, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import Node from "../Node";
 import ParticleEdge from "./ParticleEdge";
-
+import {
+  InstancedMesh,
+  Object3D,
+  SphereGeometry,
+  MeshPhysicalMaterial,
+} from "three";
 export default function Graph({ center, children }) {
   const groupRef = useRef();
   const [isPaused, setIsPaused] = useState(false);

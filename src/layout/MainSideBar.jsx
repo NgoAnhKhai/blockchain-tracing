@@ -8,7 +8,7 @@ import {
   useTheme,
   Box,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home as HomeIcon,
   AccountBalanceWallet as WalletIcon,
@@ -33,62 +33,88 @@ const menuItems = [
 const MainSideBar = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { isDark, toggleTheme } = useContext(ThemeContext);
+
+  const activeColor = "#ff4d88";
 
   return (
     <Box
       sx={{
         width: "100%",
         bgcolor: theme.palette.background.paper,
-        color: theme.palette.text.primary,
+        color: theme.palette.text.secondary,
         height: "100vh",
-        fontFamily: "IBM Plex Sans JP, sans-serif",
         display: "flex",
         flexDirection: "column",
-        position: "relative",
       }}
     >
       {/* Header */}
-      <Box sx={{ p: 2, textAlign: "center", fontSize: 20, fontWeight: "bold" }}>
+      <Box
+        sx={{
+          p: 2,
+          textAlign: "center",
+          fontSize: 20,
+          fontWeight: "bold",
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          color: theme.palette.text.primary,
+        }}
+      >
         BlockTrace
       </Box>
 
       {/* Menu */}
       <List>
-        {menuItems.map(({ text, icon, path }) => (
-          <ListItem
-            key={text}
-            onClick={() => navigate(path)}
-            sx={{
-              mb: 1,
-              cursor: "pointer",
-              transition: "background-color 0.2s",
-              "&:hover": {
-                bgcolor: "#333",
-              },
-            }}
-          >
-            <ListItemIcon sx={{ color: theme.palette.text.primary }}>
-              {icon}
-            </ListItemIcon>
-            <ListItemText primary={text} />
-          </ListItem>
-        ))}
+        {menuItems.map(({ text, icon, path }) => {
+          const isActive = pathname === path;
+          return (
+            <ListItem
+              key={text}
+              onClick={() => navigate(path)}
+              sx={{
+                mb: 1,
+                mx: 1,
+                borderRadius: 15,
+                width: 200,
+                cursor: "pointer",
+                transition: "background-color 0.3s ease",
+                bgcolor: isActive
+                  ? theme.palette.action.selected
+                  : "transparent",
+                "&:hover": {
+                  bgcolor: theme.palette.action.hover,
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 40,
+                  color: isActive ? activeColor : theme.palette.text.secondary,
+                }}
+              >
+                {icon}
+              </ListItemIcon>
+              <ListItemText
+                primary={text}
+                primaryTypographyProps={{
+                  fontWeight: isActive ? 600 : 500,
+                  fontSize: 14,
+                  color: theme.palette.text.primary,
+                }}
+              />
+            </ListItem>
+          );
+        })}
       </List>
 
-      <Divider sx={{ bgcolor: theme.palette.divider }} />
+      <Divider sx={{ bgcolor: theme.palette.divider, mt: "auto" }} />
 
       {/* Footer: Toggle Dark/Light */}
       <Box
         sx={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          width: "100%",
           px: 2,
-          py: 3,
+          py: 2,
           borderTop: `1px solid ${theme.palette.divider}`,
-          bgcolor: theme.palette.background.paper,
         }}
       >
         <ToggleMode isDark={isDark} toggleTheme={toggleTheme} />

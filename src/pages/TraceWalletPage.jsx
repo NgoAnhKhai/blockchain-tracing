@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Box,
@@ -19,7 +18,6 @@ import ChartMoneyFlow from "../components/charts/ChartMoneyFlow";
 const TraceWalletPage = () => {
   const theme = useTheme();
 
-  // Dữ liệu tạm cho Wallet Overview
   const walletOverview = {
     totalTx: 143,
     totalReceived: "6.5 ETH",
@@ -28,7 +26,6 @@ const TraceWalletPage = () => {
     lastActive: "Active 2 years ago • 5 mins ago",
   };
 
-  // Dữ liệu tạm cho Transaction List (có thể thay bằng prop hoặc after API)
   const transactionList = [
     {
       hash: "0x9...23",
@@ -54,7 +51,6 @@ const TraceWalletPage = () => {
       token: "ETH",
       time: "5 mins ago",
     },
-    // Bạn có thể thêm nhiều dòng giả lập hơn
   ];
 
   // Dữ liệu tạm cho Related Alerts
