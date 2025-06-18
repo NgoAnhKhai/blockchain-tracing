@@ -20,13 +20,14 @@ import WalletSelector from "../components/WalletSelector";
 import LargeAreaChart from "../components/charts/LargeAreaChart";
 import WeeklyAreaChart from "../components/charts/WeeklyAreaChart";
 import { getTxList } from "../services/GetPopularWallet";
+import Loader from "../components/loading/Loading";
 
 const RECENT_COUNT = 8; // Số giao dịch hiển thị
 
 const HomePage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-
+  const [loading, setLoading] = useState(true);
   const [selectedWallet, setSelectedWallet] = useState(null);
   const [txList, setTxList] = useState([]);
 
@@ -43,8 +44,10 @@ const HomePage = () => {
   // Lấy danh sách tx khi wallet thay đổi
   useEffect(() => {
     if (selectedWallet) {
+      setLoading(true);
       getTxList(selectedWallet.address).then((txs) => {
         setTxList(txs);
+        setLoading(false);
       });
     }
   }, [selectedWallet]);
@@ -89,6 +92,9 @@ const HomePage = () => {
       time: "2 hrs ago",
     },
   ];
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -144,9 +150,9 @@ const HomePage = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Tx Hash</TableCell>
-                  <TableCell>From</TableCell>
+                  <TableCell sx={{ color: "#F028FD" }}>From</TableCell>
                   <TableCell>To</TableCell>
-                  <TableCell>Amount</TableCell>
+                  <TableCell sx={{ color: "#fd4d85" }}>Amount</TableCell>
                   <TableCell>Time</TableCell>
                 </TableRow>
               </TableHead>
@@ -162,9 +168,23 @@ const HomePage = () => {
                     }}
                   >
                     <TableCell>{tx.hash.slice(0, 12)}…</TableCell>
-                    <TableCell>{tx.from.slice(0, 10)}…</TableCell>
+                    <TableCell
+                      sx={{
+                        color: "#F028FD",
+                        fontWeight: 700,
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      {tx.from.slice(0, 10)}…
+                    </TableCell>
                     <TableCell>{tx.to?.slice(0, 10)}…</TableCell>
-                    <TableCell>
+                    <TableCell
+                      sx={{
+                        color: "#fd4d85",
+                        fontWeight: 700,
+                        letterSpacing: 0.5,
+                      }}
+                    >
                       {(parseFloat(tx.value) / 1e18).toFixed(4)} ETH
                     </TableCell>
                     <TableCell>

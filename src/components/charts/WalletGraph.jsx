@@ -1,4 +1,3 @@
-// src/components/WalletGraph.jsx
 import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import { useTheme } from "@mui/material";
@@ -18,14 +17,21 @@ export default function WalletGraph({ data, width = 800, height = 600 }) {
 
     const container = svg.append("g");
 
-    svg.call(
-      d3
-        .zoom()
-        .scaleExtent([0.2, 5])
-        .on("zoom", (event) => {
-          container.attr("transform", event.transform);
-        })
-    );
+    // Zoom + Pan với UX tốt hơn
+    const zoomBehavior = d3
+      .zoom()
+      .scaleExtent([0.2, 5])
+      .on("zoom", (event) => {
+        container.attr("transform", event.transform);
+      })
+      .on("start", () => {
+        svg.style("cursor", "grabbing");
+      })
+      .on("end", () => {
+        svg.style("cursor", "grab");
+      });
+
+    svg.call(zoomBehavior);
 
     // 2) defs: drop shadow + gradients
     const defs = container.append("defs");
@@ -69,7 +75,6 @@ export default function WalletGraph({ data, width = 800, height = 600 }) {
       links.push({ source: from, target: to });
     });
     const nodes = Array.from(nodesMap.values());
-    // random initial position
     nodes.forEach((d) => {
       d.x = Math.random() * width;
       d.y = Math.random() * height;
@@ -86,7 +91,6 @@ export default function WalletGraph({ data, width = 800, height = 600 }) {
           .distance(() => 100 + Math.random() * 50)
           .strength(0.6)
       )
-      // giữ parent ở giữa
       .force(
         "x",
         d3.forceX(width / 2).strength((d) => (d.isParent ? 1 : 0))

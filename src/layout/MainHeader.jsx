@@ -5,27 +5,43 @@ import {
   ToggleButton,
   useTheme,
   IconButton,
+  Avatar,
+  Menu,
+  MenuItem,
+  Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom"; // Thêm useNavigate ở đây
 import SearchingBar from "../components/searching/SearchingBar";
 import { useViewMode } from "../context/ViewModeContext";
 import { LoginButton, RegisterButton } from "../components/button/ButtonAuth";
 import Login from "../components/auth/Login";
 import Register from "../components/auth/register";
+import { useAuth } from "../context/AuthContext";
 
 export default function MainHeader() {
   const theme = useTheme();
   const { pathname } = useLocation();
+  const navigate = useNavigate(); // Khởi tạo navigate
   const { viewMode, setViewMode } = useViewMode();
   const showToggle = pathname === "/wallet-graph";
+  const { user, signout } = useAuth();
 
-  // mode: null | "login" | "register"
   const [mode, setMode] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const openMenu = Boolean(anchorEl);
+
+  const handleAvatarClick = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+
+  // Thêm hàm điều hướng đến profile
+  const handleProfileClick = () => {
+    handleMenuClose();
+    navigate("/user/profile");
+  };
 
   return (
     <>
-      {/* === HEADER BAR === */}
       <Box
         sx={{
           width: "100%",
@@ -67,11 +83,54 @@ export default function MainHeader() {
         </Box>
 
         {/* Right */}
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <LoginButton onClick={() => setMode("login")}>Login</LoginButton>
-          <RegisterButton onClick={() => setMode("register")}>
-            Register
-          </RegisterButton>
+        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          {!user ? (
+            <>
+              <LoginButton onClick={() => setMode("login")}>Login</LoginButton>
+              <RegisterButton onClick={() => setMode("register")}>
+                Register
+              </RegisterButton>
+            </>
+          ) : (
+            <>
+              <IconButton onClick={handleAvatarClick}>
+                <Avatar sx={{ bgcolor: "#da00ff", color: "#fff" }}>
+                  {user.username?.[0]?.toUpperCase() ||
+                    user.email?.[0]?.toUpperCase() ||
+                    "U"}
+                </Avatar>
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={openMenu}
+                onClose={handleMenuClose}
+                PaperProps={{
+                  sx: {
+                    minWidth: 180,
+                    bgcolor: theme.palette.background.paper,
+                  },
+                }}
+              >
+                <Box sx={{ px: 2, py: 1 }}>
+                  <Typography fontWeight="bold">
+                    {user.username || user.email}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {user.email}
+                  </Typography>
+                </Box>
+                <MenuItem onClick={handleProfileClick}>Profile</MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    signout();
+                    handleMenuClose();
+                  }}
+                >
+                  Đăng xuất
+                </MenuItem>
+              </Menu>
+            </>
+          )}
         </Box>
       </Box>
 
@@ -96,10 +155,18 @@ export default function MainHeader() {
               <CloseIcon />
             </IconButton>
           </Box>
-
-          {/* Chỉ cần render component bạn có sẵn */}
-          {mode === "login" && <Login />}
-          {mode === "register" && <Register />}
+          {mode === "login" && (
+            <Login
+              onSwitchToRegister={() => setMode("register")}
+              onLoginSuccess={() => setMode(null)}
+            />
+          )}
+          {mode === "register" && (
+            <Register
+              onRegisterSuccess={() => setMode("login")}
+              onSwitchToLogin={() => setMode("login")}
+            />
+          )}
         </Box>
       )}
     </>
