@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Box,
@@ -93,14 +92,11 @@ const TransactionsPage = () => {
         {/* =======================
             PHẦN TÌM KIẾM (SearchingBar)
         ======================== */}
-        <Box>
-          <SearchingBar />
-        </Box>
 
         <Card
           sx={{
             backgroundColor: theme.palette.background.paper,
-            borderRadius: 1, 
+            borderRadius: 1,
           }}
         >
           <CardContent>
