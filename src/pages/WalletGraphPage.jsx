@@ -21,10 +21,9 @@ export default function WalletGraphPage() {
     setLoading(true);
     setGraphData(null);
 
-    // Tạo 1 async function bên trong useEffect
     const fetchData = async () => {
       try {
-        const res = await getTraceWallet(address);
+        const res = await getTraceWallet(address.toLowerCase());
 
         console.log("Graph Data: ", res);
         const data = res[0] || null;
