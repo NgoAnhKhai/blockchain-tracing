@@ -11,7 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { useLocation, useNavigate } from "react-router-dom"; // Thêm useNavigate ở đây
+import { useLocation, useNavigate } from "react-router-dom";
 import SearchingBar from "../components/searching/SearchingBar";
 import { useViewMode } from "../context/ViewModeContext";
 import { LoginButton, RegisterButton } from "../components/button/ButtonAuth";
@@ -22,7 +22,7 @@ import { useAuth } from "../context/AuthContext";
 export default function MainHeader() {
   const theme = useTheme();
   const { pathname } = useLocation();
-  const navigate = useNavigate(); // Khởi tạo navigate
+  const navigate = useNavigate();
   const { viewMode, setViewMode } = useViewMode();
   const showToggle = pathname === "/wallet-graph";
   const { user, signout } = useAuth();
@@ -34,7 +34,6 @@ export default function MainHeader() {
   const handleAvatarClick = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
-  // Thêm hàm điều hướng đến profile
   const handleProfileClick = () => {
     handleMenuClose();
     navigate("/user/profile");

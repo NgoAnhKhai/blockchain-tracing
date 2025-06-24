@@ -2,7 +2,12 @@ import React, { useEffect, useRef } from "react";
 import { Box, InputBase, Typography, useTheme } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
-const SearchingBar = () => {
+const SearchingBar = ({
+  value,
+  onChange,
+  onKeyDown,
+  placeholder = "Search",
+}) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const inputRef = useRef(null);
@@ -54,7 +59,10 @@ const SearchingBar = () => {
       />
       <InputBase
         inputRef={inputRef}
-        placeholder="Search"
+        value={value}
+        onChange={onChange}
+        onKeyDown={onKeyDown}
+        placeholder={placeholder}
         sx={{
           color: isDark ? "#DDD" : "#333",
           flex: 1,

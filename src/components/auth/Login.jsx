@@ -22,11 +22,12 @@ const Login = ({ onSwitchToRegister, onLoginSuccess }) => {
     setLoading(true);
     try {
       await signin(form.email, form.password);
+      onLoginSuccess?.();
     } catch (err) {
       setError(err?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    onLoginSuccess?.();
   };
 
   return (

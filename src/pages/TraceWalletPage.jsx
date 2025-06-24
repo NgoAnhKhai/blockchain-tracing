@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Card,
@@ -12,52 +12,52 @@ import {
   Chip,
   Divider,
   useTheme,
+  Skeleton,
 } from "@mui/material";
 import ChartMoneyFlow from "../components/charts/ChartMoneyFlow";
+import { useParams } from "react-router-dom";
+import { GetDetailAddress } from "../services/dgraph/GetDetailAddress";
 
 const TraceWalletPage = () => {
   const theme = useTheme();
+  const { address } = useParams();
+  const [detail, setDetail] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const walletOverview = {
-    totalTx: 143,
-    totalReceived: "6.5 ETH",
-    totalSent: "5.1 ETH",
-    chain: "ETH",
-    lastActive: "Active 2 years ago • 5 mins ago",
-  };
+  // Call API when address param changes
+  useEffect(() => {
+    async function fetchDetail() {
+      setLoading(true);
+      const res = await GetDetailAddress(address);
+      console.log("res:", res);
+      setDetail(res?.data?.data);
+      setLoading(false);
+    }
+    if (address) fetchDetail();
+  }, [address]);
 
-  const transactionList = [
+  // Mapping overview cards
+  const overviewCards = [
     {
-      hash: "0x9...23",
-      from: "0x06fa...e07",
-      to: "0x06fa...e07",
-      amount: "5 ETH",
-      token: "ETH",
-      time: "Just now",
+      label: "Normal Txns",
+      value: detail?.normalTxCount ?? "--",
+      color: "#ff4d88",
     },
     {
-      hash: "0x9...23",
-      from: "0x06fa...e07",
-      to: "0x06fa...e07",
-      amount: "1.53 ETH",
-      token: "ETH",
-      time: "2 mins ago",
+      label: "Internal Txns",
+      value: detail?.internalTxCount ?? "--",
+      color: "#00ffe7",
     },
     {
-      hash: "0x9...23",
-      from: "0x06fa...e07",
-      to: "0x06fa...e07",
-      amount: "1 ETH",
-      token: "ETH",
-      time: "5 mins ago",
+      label: "Blocks",
+      value: detail?.blockCount ?? "--",
+      color: "#bb86fc",
     },
-  ];
-
-  // Dữ liệu tạm cho Related Alerts
-  const relatedAlerts = [
-    { severity: "Medium", type: "Large Transaction", time: "2 hrs ago" },
-    { severity: "High", type: "Surge in Activity", time: "3 hrs ago" },
-    { severity: "Medium", type: "Unusual Behavior", time: "1 day ago" },
+    {
+      label: "Tokens",
+      value: detail?.tokenCount ?? "--",
+      color: "#ffbc00",
+    },
   ];
 
   return (
@@ -86,65 +86,61 @@ const TraceWalletPage = () => {
             sx={{ flex: 1, backgroundColor: theme.palette.background.paper }}
           >
             <CardContent>
-              {/* Dòng 3 card nhỏ */}
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", my: 1 }}>
-                <Card
-                  sx={{
-                    flex: 1,
-                    minWidth: 100,
-                    bgcolor:
-                      theme.palette.mode === "dark" ? "#2e2e2e" : "#f5f5f5",
-                  }}
-                >
-                  <CardContent>
-                    <Typography variant="subtitle2">
-                      Total Transactions
-                    </Typography>
-                    <Typography variant="h5">
-                      {walletOverview.totalTx}
-                    </Typography>
-                  </CardContent>
-                </Card>
-                <Card
-                  sx={{
-                    flex: 1,
-                    minWidth: 100,
-                    bgcolor:
-                      theme.palette.mode === "dark" ? "#2e2e2e" : "#f5f5f5",
-                  }}
-                >
-                  <CardContent>
-                    <Typography variant="subtitle2">Total Received</Typography>
-                    <Typography variant="h5">
-                      {walletOverview.totalReceived}
-                    </Typography>
-                  </CardContent>
-                </Card>
-                <Card
-                  sx={{
-                    flex: 1,
-                    minWidth: 100,
-                    bgcolor:
-                      theme.palette.mode === "dark" ? "#2e2e2e" : "#f5f5f5",
-                  }}
-                >
-                  <CardContent>
-                    <Typography variant="subtitle2">Total Sent</Typography>
-                    <Typography variant="h5">
-                      {walletOverview.totalSent}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Box>
+              <Typography variant="h6" mb={2}>
+                Wallet:{" "}
+                <span style={{ fontFamily: "monospace" }}>
+                  {address?.slice(0, 12)}...
+                </span>
+              </Typography>
+
+              {loading ? (
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  {[1, 2, 3, 4].map((_, idx) => (
+                    <Skeleton
+                      variant="rectangular"
+                      key={idx}
+                      width={110}
+                      height={70}
+                      sx={{ borderRadius: 3 }}
+                    />
+                  ))}
+                </Box>
+              ) : (
+                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 1 }}>
+                  {overviewCards.map((c) => (
+                    <Card
+                      key={c.label}
+                      sx={{
+                        flex: 1,
+                        minWidth: 110,
+                        bgcolor:
+                          theme.palette.mode === "dark" ? "#2e2e2e" : "#f5f5f5",
+                        border: `2px solid ${c.color}`,
+                        borderRadius: 3,
+                        textAlign: "center",
+                        boxShadow: "0 2px 10px 0 #e9e9e926",
+                      }}
+                    >
+                      <CardContent sx={{ py: 1 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ color: c.color, fontWeight: 700 }}
+                        >
+                          {c.label}
+                        </Typography>
+                        <Typography variant="h5" fontWeight={900}>
+                          {c.value}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Box>
+              )}
 
               <Divider sx={{ my: 1 }} />
 
-              {/* Dòng ETH + last active */}
-              <Typography variant="subtitle2">
-                {walletOverview.chain}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                {walletOverview.lastActive}
+              <Typography variant="subtitle2" color="text.secondary">
+                Data is synced from blockchain to graphDB.
               </Typography>
             </CardContent>
           </Card>
@@ -185,31 +181,14 @@ const TraceWalletPage = () => {
                   Expand
                 </Typography>
               </Box>
-
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: "bold" }}>Tx Hash</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>From</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>To</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>Amount</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>Token</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>Time</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {transactionList.map((tx, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell>{tx.hash}</TableCell>
-                      <TableCell>{tx.from}</TableCell>
-                      <TableCell>{tx.to}</TableCell>
-                      <TableCell>{tx.amount}</TableCell>
-                      <TableCell>{tx.token}</TableCell>
-                      <TableCell>{tx.time}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              {/* Nếu chưa có API transactions, để placeholder: */}
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ textAlign: "center", my: 5 }}
+              >
+                Coming soon...
+              </Typography>
             </CardContent>
           </Card>
 
@@ -234,39 +213,14 @@ const TraceWalletPage = () => {
                   Expand
                 </Typography>
               </Box>
-
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: "bold" }}>Severity</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      Alert Type
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>Time</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {relatedAlerts.map((alert, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell>
-                        <Chip
-                          label={alert.severity}
-                          color={
-                            alert.severity === "High"
-                              ? "error"
-                              : alert.severity === "Medium"
-                              ? "warning"
-                              : "default"
-                          }
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>{alert.type}</TableCell>
-                      <TableCell>{alert.time}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              {/* Nếu chưa có API alerts, để placeholder: */}
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ textAlign: "center", my: 5 }}
+              >
+                Coming soon...
+              </Typography>
             </CardContent>
           </Card>
         </Box>
