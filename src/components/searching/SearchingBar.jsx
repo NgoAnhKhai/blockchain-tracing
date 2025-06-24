@@ -1,16 +1,23 @@
 import React, { useEffect, useRef } from "react";
 import { Box, InputBase, Typography, useTheme } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import { useAddressSearch } from "../../context/AddressSearchContext";
 
-const SearchingBar = ({
-  value,
-  onChange,
-  onKeyDown,
-  placeholder = "Search",
-}) => {
+const SearchingBar = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const inputRef = useRef(null);
+  const { address, setAddress } = useAddressSearch();
+
+  const handleInputChange = (e) => setAddress(e.target.value);
+
+  // Bắt phím Enter, log ra để test
+  const handleInputKeyDown = (e) => {
+    if (e.key === "Enter") {
+      console.log("Address searched:", address);
+      // TODO: Sau này dispatch hoặc call API tiếp
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -28,7 +35,6 @@ const SearchingBar = ({
       sx={{
         display: "flex",
         alignItems: "center",
-        // 1) Chuyển nền gần tông với panel
         bgcolor: isDark ? "#1F232C" : "#fff",
         borderRadius: "8px",
         width: "100%",
@@ -36,14 +42,10 @@ const SearchingBar = ({
         px: 2,
         py: 1,
         gap: 1,
-        // 2) Viền xám đen hơn
         border: isDark ? "1px solid #3C3F46" : "1px solid #ddd",
-
         transition:
           "background-color 0.3s ease, color 0.3s ease, border-color 0.2s ease",
-
         "&:focus-within": {
-          // 3) Highlight nhẹ khi focus
           borderColor: isDark ? "#00FFE7" : theme.palette.primary.main,
           boxShadow: isDark
             ? "0 0 0 2px rgba(0,255,231,0.3)"
@@ -59,10 +61,10 @@ const SearchingBar = ({
       />
       <InputBase
         inputRef={inputRef}
-        value={value}
-        onChange={onChange}
-        onKeyDown={onKeyDown}
-        placeholder={placeholder}
+        value={address}
+        onChange={handleInputChange}
+        onKeyDown={handleInputKeyDown}
+        placeholder="Search"
         sx={{
           color: isDark ? "#DDD" : "#333",
           flex: 1,

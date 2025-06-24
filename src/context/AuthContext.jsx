@@ -27,10 +27,23 @@ export const AuthProvider = ({ children }) => {
     }
     return null;
   });
+  const signup = async (username, email, password) => {
+    try {
+      const response = await apiService.post("/api/v1/auth/register", {
+        username,
+        email,
+        password,
+      });
+      return response;
+    } catch (error) {
+      console.error("Signup error:", error);
+      throw error;
+    }
+  };
 
   const signin = async (email, password) => {
     try {
-      const response = await apiService.post("/authentications/login", {
+      const response = await apiService.post("/api/v1/auth/login", {
         email,
         password,
       });
@@ -71,6 +84,7 @@ export const AuthProvider = ({ children }) => {
       }
       return true;
     } catch (error) {
+      console.error("Failed to decode token", error);
       localStorage.removeItem("access_token");
       localStorage.removeItem("role");
       setUser(null);
@@ -92,13 +106,17 @@ export const AuthProvider = ({ children }) => {
           }
         }
       } catch (error) {
+        console.log("Failed to decode token on mount", error);
+
         signout();
       }
     }
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, signin, signout, isAuthenticated }}>
+    <AuthContext.Provider
+      value={{ user, signup, signin, signout, isAuthenticated }}
+    >
       {children}
     </AuthContext.Provider>
   );
