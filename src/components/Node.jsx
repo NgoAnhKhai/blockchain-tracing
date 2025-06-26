@@ -5,7 +5,9 @@ export default function Node({
   address,
   position,
   isCenter = false,
+  nodeColor = "#00ffff",
   onHover = () => {},
+  onClick,
 }) {
   const meshRef = useRef();
   const [hovered, setHovered] = useState(false);
@@ -21,6 +23,17 @@ export default function Node({
     onHover(false);
   };
 
+  // Làm màu hover sáng lên một chút
+  function lighten(color) {
+    try {
+      let col = color.replace("hsl(", "").replace(")", "").split(",");
+      let l = Math.min(parseInt(col[2], 10) + 12, 90);
+      return `hsl(${col[0]},${col[1]},${l}%)`;
+    } catch {
+      return color;
+    }
+  }
+
   return (
     <mesh
       ref={meshRef}
@@ -28,14 +41,15 @@ export default function Node({
       scale={isCenter ? 1.5 : 0.7}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
+      onClick={onClick}
     >
       <sphereGeometry args={[0.5, 32, 32]} />
       <meshPhysicalMaterial
-        color={isCenter ? "#00ffff" : hovered ? "#66ffff" : "#0088aa"}
-        emissive={isCenter ? "#0088aa" : "#005566"}
-        metalness={isCenter ? 1 : 0.5}
-        roughness={isCenter ? 0 : 0.2}
-        clearcoat={isCenter ? 1 : 0.3}
+        color={hovered ? lighten(nodeColor) : nodeColor}
+        emissive={isCenter ? "#0088aa" : "#003344"}
+        metalness={isCenter ? 1 : 0.7}
+        roughness={isCenter ? 0.13 : 0.2}
+        clearcoat={isCenter ? 1 : 0.5}
         clearcoatRoughness={isCenter ? 0 : 0.2}
       />
 

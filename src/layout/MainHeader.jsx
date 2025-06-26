@@ -5,27 +5,43 @@ import {
   ToggleButton,
   useTheme,
   IconButton,
+  Avatar,
+  Menu,
+  MenuItem,
+  Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import SearchingBar from "../components/searching/SearchingBar";
 import { useViewMode } from "../context/ViewModeContext";
 import { LoginButton, RegisterButton } from "../components/button/ButtonAuth";
 import Login from "../components/auth/Login";
 import Register from "../components/auth/register";
+import { useAuth } from "../context/AuthContext";
 
 export default function MainHeader() {
   const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { viewMode, setViewMode } = useViewMode();
   const showToggle = pathname === "/wallet-graph";
+  const { user, signout } = useAuth();
 
-  // mode: null | "login" | "register"
   const [mode, setMode] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const openMenu = Boolean(anchorEl);
+
+  const handleAvatarClick = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+
+  const handleProfileClick = () => {
+    handleMenuClose();
+    navigate("/user/profile");
+  };
 
   return (
     <>
-      {/* === HEADER BAR === */}
       <Box
         sx={{
           width: "100%",
@@ -40,17 +56,9 @@ export default function MainHeader() {
           zIndex: 1000,
         }}
       >
-        {/* Left */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            flex: 1,
-            minWidth: 300,
-            gap: 2,
-          }}
-        >
-          <Box sx={{ flex: 1, maxWidth: 500 }}>
+        {/* Left: Thanh tìm kiếm + Toggle */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ minWidth: 200, maxWidth: 360 }}>
             <SearchingBar />
           </Box>
           {showToggle && (
@@ -59,6 +67,15 @@ export default function MainHeader() {
               value={viewMode}
               exclusive
               onChange={(e, v) => v && setViewMode(v)}
+              sx={{
+                ml: 1,
+                background: theme.palette.background.default,
+                borderRadius: 2,
+                height: 38,
+                boxShadow: isDark
+                  ? "0 2px 10px #2d265a22"
+                  : "0 1px 2px #cdc2ff11",
+              }}
             >
               <ToggleButton value="2d">2D</ToggleButton>
               <ToggleButton value="3d">3D</ToggleButton>
@@ -66,12 +83,55 @@ export default function MainHeader() {
           )}
         </Box>
 
-        {/* Right */}
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <LoginButton onClick={() => setMode("login")}>Login</LoginButton>
-          <RegisterButton onClick={() => setMode("register")}>
-            Register
-          </RegisterButton>
+        {/* Right: Auth/User Info */}
+        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          {!user ? (
+            <>
+              <LoginButton onClick={() => setMode("login")}>Login</LoginButton>
+              <RegisterButton onClick={() => setMode("register")}>
+                Register
+              </RegisterButton>
+            </>
+          ) : (
+            <>
+              <IconButton onClick={handleAvatarClick}>
+                <Avatar sx={{ bgcolor: "#da00ff", color: "#fff" }}>
+                  {user.username?.[0]?.toUpperCase() ||
+                    user.email?.[0]?.toUpperCase() ||
+                    "U"}
+                </Avatar>
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={openMenu}
+                onClose={handleMenuClose}
+                PaperProps={{
+                  sx: {
+                    minWidth: 180,
+                    bgcolor: theme.palette.background.paper,
+                  },
+                }}
+              >
+                <Box sx={{ px: 2, py: 1 }}>
+                  <Typography fontWeight="bold">
+                    {user.username || user.email}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {user.email}
+                  </Typography>
+                </Box>
+                <MenuItem onClick={handleProfileClick}>Profile</MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    signout();
+                    handleMenuClose();
+                  }}
+                >
+                  Đăng xuất
+                </MenuItem>
+              </Menu>
+            </>
+          )}
         </Box>
       </Box>
 
@@ -96,10 +156,18 @@ export default function MainHeader() {
               <CloseIcon />
             </IconButton>
           </Box>
-
-          {/* Chỉ cần render component bạn có sẵn */}
-          {mode === "login" && <Login />}
-          {mode === "register" && <Register />}
+          {mode === "login" && (
+            <Login
+              onSwitchToRegister={() => setMode("register")}
+              onLoginSuccess={() => setMode(null)}
+            />
+          )}
+          {mode === "register" && (
+            <Register
+              onRegisterSuccess={() => setMode("login")}
+              onSwitchToLogin={() => setMode("login")}
+            />
+          )}
         </Box>
       )}
     </>

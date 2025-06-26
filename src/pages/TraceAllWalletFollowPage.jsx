@@ -1,246 +1,132 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
-  Grid,
+  Divider,
   Card,
   CardContent,
-  Typography,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Button,
-  Divider,
+  Pagination,
   useTheme,
-  IconButton,
-  TextField,
-  InputAdornment,
 } from "@mui/material";
-import WalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import Sparkline from "../components/charts/Sparkline";
-import ActivityHeatmap from "../components/charts/ActivityHeatmap";
 
-const followersData = [
-  {
-    address: "0x7f4d...05c5",
-    lastActive: "3 hours ago",
-    sparkData: [3, 5, 2, 6, 4, 7, 5],
-    followed: false,
-  },
-  {
-    address: "0x348a...5b0",
-    lastActive: "1 day ago",
-    sparkData: [2, 4, 3, 5, 4, 6, 3],
-    followed: true,
-  },
-  {
-    address: "0x08ba...05c5",
-    lastActive: "1 day ago",
-    sparkData: [1, 3, 1, 2, 1, 3, 2],
-    followed: false,
-  },
-  {
-    address: "0x08fa...05cf",
-    lastActive: "5 mins ago",
-    sparkData: [5, 7, 6, 8, 7, 9, 8],
-    followed: false,
-  },
-];
-
+import WalletTable from "../components/wallets/WalletTable";
+import FollowFilterSwitcher from "../components/controls/FollowFilterButton";
+import { GetFeaturedWallet } from "../services/wallets/GetFeaturedWallet";
+import { SubscribeWallet } from "../services/follow/SubscribeWallet";
+import { UnsubscribeWallet } from "../services/follow/UnsubscribeWallet";
+import { useNavigate } from "react-router-dom";
+import Loader from "../components/loading/Loading";
 export default function TraceAllWalletFollowPage() {
   const theme = useTheme();
-  const [followers, setFollowers] = useState(followersData);
-  const [search, setSearch] = useState("");
+  const [wallets, setWallets] = useState([]);
+  const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const walletsPerPage = 10;
+  const navigate = useNavigate();
 
-  const toggleFollow = (i) =>
-    setFollowers((f) =>
-      f.map((row, idx) =>
-        idx === i ? { ...row, followed: !row.followed } : row
-      )
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const featuredRes = await GetFeaturedWallet();
+        const featured = (featuredRes?.featured_wallets || []).map((w) => ({
+          ...w,
+          _balanceNum: Number(
+            (w.balance || "0").replace(/,/g, "").replace(/[^0-9.]/g, "")
+          ),
+          is_followed: w.is_following ?? false,
+        }));
+        setWallets(featured.sort((a, b) => b._balanceNum - a._balanceNum));
+      } catch (error) {
+        console.error("Failed to fetch wallets:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const handleFollowToggle = async (walletId, walletAddress, isFollowed) => {
+    try {
+      if (isFollowed) {
+        await UnsubscribeWallet(walletAddress);
+      } else {
+        await SubscribeWallet(walletAddress);
+      }
+      setWallets((prev) =>
+        prev.map((w) =>
+          w.id === walletId ? { ...w, is_followed: !isFollowed } : w
+        )
+      );
+    } catch (err) {
+      console.error("Follow/unfollow failed", err);
+    }
+  };
+
+  const filteredWallets = wallets.filter((wallet) =>
+    filter === "followed" ? wallet.is_followed : true
+  );
+
+  const totalPages = Math.ceil(filteredWallets.length / walletsPerPage);
+  const paginatedWallets = filteredWallets.slice(
+    (page - 1) * walletsPerPage,
+    page * walletsPerPage
+  );
+
+  const formatAddress = (address) => {
+    if (!address) return "--";
+    return address.slice(0, 4) + "..." + address.slice(-2);
+  };
+
+  const handleRowClick = (address) => {
+    navigate(`/trace-wallets/${encodeURIComponent(address)}`);
+  };
+
+  if (loading)
+    return (
+      <Box
+        sx={{
+          minHeight: "60vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Loader />
+      </Box>
     );
-
-  // Summary
-  const totalFollowing = followers.filter((f) => f.followed).length;
-  const totalTx = followers.reduce(
-    (sum, f) => sum + f.sparkData.reduce((a, b) => a + b, 0),
-    0
-  );
-  const activeTime = "12d 8h";
-
-  // Filter theo search
-  const filtered = followers.filter((f) =>
-    f.address.toLowerCase().includes(search.toLowerCase())
-  );
-
   return (
     <Box
       sx={{
         p: 3,
         bgcolor: theme.palette.background.default,
-        minHeight: "100vh",
+        minHeight: "100%",
       }}
     >
-      {/* Summary Cards */}
-      <Grid
-        sx={{
-          display: "flex",
-          justifyContent: "space-around",
-          flexWrap: "wrap",
-          gap: 2,
-          mb: 2,
-        }}
-      >
-        {/* Following */}
-        <Grid item xs={12} sm={6} md={3}>
-          <Card
-            sx={{
-              backgroundColor: "rgba(70,14,82,0.08)",
-              borderRadius: 2,
-              height: 140,
-              width: 200,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <CardContent sx={{ textAlign: "center", p: 2 }}>
-              <Typography variant="h3" color="#ff4d88" gutterBottom>
-                {totalFollowing}
-              </Typography>
-              <Typography variant="subtitle2" color="textSecondary">
-                Following
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+      <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+        <FollowFilterSwitcher filter={filter} setFilter={setFilter} />
+      </Box>
 
-        {/* Transactions */}
-        <Grid item xs={12} sm={6} md={3}>
-          <Card
-            sx={{
-              backgroundColor: "rgba(70,14,82,0.08)",
-              borderRadius: 2,
-              height: 140,
-              width: 200,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <CardContent sx={{ textAlign: "center", p: 2 }}>
-              <Typography variant="h3" color="#bb86fc" gutterBottom>
-                {`${totalTx}K`}
-              </Typography>
-              <Typography variant="subtitle2" color="textSecondary">
-                Transactions
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Activity Heatmap */}
-        <Grid item xs={12} sm={6} md={3}>
-          <Card
-            sx={{
-              backgroundColor: "rgba(70,14,82,0.08)",
-              borderRadius: 2,
-              height: 140,
-              width: 200,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <CardContent sx={{ textAlign: "center", p: 2 }}>
-              <Typography
-                variant="subtitle2"
-                color="textSecondary"
-                gutterBottom
-              >
-                Activity Heatmap
-              </Typography>
-              <ActivityHeatmap />
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Active Time */}
-        <Grid item xs={12} sm={6} md={3}>
-          <Card
-            sx={{
-              backgroundColor: "rgba(70,14,82,0.08)",
-              borderRadius: 2,
-              height: 140,
-              width: 200,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <CardContent sx={{ textAlign: "center", p: 2 }}>
-              <Typography variant="h3" color="textPrimary" gutterBottom>
-                {activeTime}
-              </Typography>
-              <Typography variant="subtitle2" color="textSecondary">
-                Active Time
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Full Table */}
       <Divider sx={{ mb: 2 }} />
-      <Card
-        sx={{
-          backgroundColor: "rgba(70, 14, 82, 0.08)",
-          borderRadius: 2,
-        }}
-      >
+      <Card sx={{ backgroundColor: "rgba(40, 16, 60, 0.18)", borderRadius: 3 }}>
         <CardContent>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Last Active</TableCell>
-                <TableCell>Sparkline</TableCell>
-                <TableCell align="right">Action</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filtered.map((row, idx) => (
-                <TableRow key={row.address}>
-                  <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <WalletIcon fontSize="small" sx={{ color: "#bb86fc" }} />
-                      {row.address}
-                    </Box>
-                  </TableCell>
-                  <TableCell>{row.lastActive}</TableCell>
-                  <TableCell>
-                    <Sparkline data={row.sparkData} color="#ff4d88" />
-                  </TableCell>
-                  <TableCell align="right">
-                    <Button
-                      size="small"
-                      variant={row.followed ? "outlined" : "contained"}
-                      sx={{
-                        color: row.followed ? "#ff4d88" : "#fff",
-                        borderColor: "#ff4d88",
-                        "&:hover": {
-                          backgroundColor: "rgba(255,77,136,0.1)",
-                        },
-                      }}
-                      onClick={() => toggleFollow(idx)}
-                    >
-                      {row.followed ? "Unfollow" : "Follow"}
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <WalletTable
+            wallets={paginatedWallets}
+            onToggleFollow={handleFollowToggle}
+            onRowClick={handleRowClick}
+            formatAddress={formatAddress}
+          />
+          <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+              color="primary"
+              siblingCount={1}
+              boundaryCount={1}
+              showFirstButton
+              showLastButton
+            />
+          </Box>
         </CardContent>
       </Card>
     </Box>

@@ -1,11 +1,34 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Box, InputBase, Typography, useTheme } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import { useAddressSearch } from "../../context/AddressSearchContext";
 
 const SearchingBar = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const inputRef = useRef(null);
+  const { address, setAddress } = useAddressSearch();
+
+  // State cho input local, sync theo address khi address thay đổi từ ngoài
+  const [inputValue, setInputValue] = useState(address || "");
+
+  // Cập nhật input khi address context thay đổi (khi search xong hoặc từ ngoài set)
+  useEffect(() => {
+    setInputValue(address || "");
+  }, [address]);
+
+  // Chỉ update inputValue, không update address global
+  const handleInputChange = (e) => setInputValue(e.target.value);
+
+  // Khi nhấn Enter, mới setAddress (tức là mới thực sự search)
+  const handleInputKeyDown = (e) => {
+    if (e.key === "Enter") {
+      setAddress(inputValue.trim());
+      // Có thể clear inputValue nếu muốn
+      // setInputValue("");
+      console.log("Address searched:", inputValue.trim());
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -23,7 +46,6 @@ const SearchingBar = () => {
       sx={{
         display: "flex",
         alignItems: "center",
-        // 1) Chuyển nền gần tông với panel
         bgcolor: isDark ? "#1F232C" : "#fff",
         borderRadius: "8px",
         width: "100%",
@@ -31,14 +53,10 @@ const SearchingBar = () => {
         px: 2,
         py: 1,
         gap: 1,
-        // 2) Viền xám đen hơn
         border: isDark ? "1px solid #3C3F46" : "1px solid #ddd",
-
         transition:
           "background-color 0.3s ease, color 0.3s ease, border-color 0.2s ease",
-
         "&:focus-within": {
-          // 3) Highlight nhẹ khi focus
           borderColor: isDark ? "#00FFE7" : theme.palette.primary.main,
           boxShadow: isDark
             ? "0 0 0 2px rgba(0,255,231,0.3)"
@@ -54,6 +72,9 @@ const SearchingBar = () => {
       />
       <InputBase
         inputRef={inputRef}
+        value={inputValue}
+        onChange={handleInputChange}
+        onKeyDown={handleInputKeyDown}
         placeholder="Search"
         sx={{
           color: isDark ? "#DDD" : "#333",

@@ -13,21 +13,19 @@ import {
   Home as HomeIcon,
   AccountBalanceWallet as WalletIcon,
   Assessment as GraphIcon,
-  ListAlt as TransactionsIcon,
-  Settings as SettingsIcon,
   WarningAmber as AlertIcon,
 } from "@mui/icons-material";
 
 import ToggleMode from "../components/button/ToggleMode";
 import { ThemeContext } from "../context/theme";
 
+const LOGO_SRC = "/block_trace.png";
+
 const menuItems = [
   { text: "Dashboard", icon: <HomeIcon />, path: "/" },
   { text: "Trace Wallet", icon: <WalletIcon />, path: "/trace-wallets" },
   { text: "Wallet Graph", icon: <GraphIcon />, path: "/wallet-graph" },
-  { text: "Transactions", icon: <TransactionsIcon />, path: "/transactions" },
   { text: "Alerts", icon: <AlertIcon />, path: "/alerts" },
-  { text: "Settings", icon: <SettingsIcon />, path: "/settings" },
 ];
 
 const MainSideBar = () => {
@@ -36,33 +34,61 @@ const MainSideBar = () => {
   const { pathname } = useLocation();
   const { isDark, toggleTheme } = useContext(ThemeContext);
 
-  const activeColor = "#ff4d88";
+  const activeBg = isDark
+    ? "linear-gradient(90deg, #342e51 0%, #7051f3 120%)"
+    : "linear-gradient(90deg, #ebe9f6 0%, #f8f7fd 120%)";
+  const activeColor = isDark ? "#ff4d88" : "#7051f3";
+  const hoverBg = isDark ? "#221d37" : "#f0eef9";
+  const borderActive = isDark ? "#a076ff77" : "#c4a9fc88";
 
   return (
     <Box
       sx={{
-        width: "100%",
+        width: 220,
         bgcolor: theme.palette.background.paper,
         color: theme.palette.text.secondary,
         height: "100vh",
         display: "flex",
         flexDirection: "column",
+        borderRight: isDark ? "1.5px solid #2f2942" : "1.5px solid #e6e2f4",
+        boxShadow: isDark ? "4px 0 16px #a076ff18" : "4px 0 16px #ded5ff11",
       }}
     >
-      {/* Header */}
+      {/* Header logo */}
       <Box
         sx={{
           p: 2,
-          textAlign: "center",
-          fontSize: 20,
-          fontWeight: "bold",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          userSelect: "none",
+          cursor: "pointer",
           borderBottom: `1px solid ${theme.palette.divider}`,
-          color: theme.palette.text.primary,
+          pb: 1.5,
+          transition: "background 0.16s, box-shadow 0.18s",
+          "&:hover": {
+            background: isDark ? "#231841" : "#ece8f7",
+          },
         }}
+        onClick={() => navigate("/")}
       >
-        BlockTrace
+        <img
+          src={LOGO_SRC}
+          alt="BlockTrace Logo"
+          style={{
+            objectFit: "contain",
+            borderRadius: 8,
+            width: "100%",
+            transform: "scale(1.17)",
+            boxShadow: isDark ? "0 0 18px #a076ff66" : "0 0 18px #c3a3ff33",
+            transition: "box-shadow 0.2s",
+            background: isDark
+              ? "linear-gradient(120deg, #23203c 60%, #353060 100%)"
+              : "linear-gradient(120deg, #f8f5fd 60%, #ede8ff 100%)",
+            padding: 4,
+          }}
+        />
       </Box>
-
       {/* Menu */}
       <List>
         {menuItems.map(({ text, icon, path }) => {
@@ -72,24 +98,42 @@ const MainSideBar = () => {
               key={text}
               onClick={() => navigate(path)}
               sx={{
-                mb: 1,
+                mb: 0.5,
                 mx: 1,
-                borderRadius: 15,
-                width: 200,
+                borderRadius: 12,
+                width: "92%",
+                alignSelf: "center",
                 cursor: "pointer",
-                transition: "background-color 0.3s ease",
-                bgcolor: isActive
-                  ? theme.palette.action.selected
-                  : "transparent",
+                background: isActive ? activeBg : "none",
+                color: isActive ? activeColor : theme.palette.text.secondary,
+                border: isActive
+                  ? `1.5px solid ${borderActive}`
+                  : "1.5px solid transparent",
+                boxShadow: isActive
+                  ? "0 2px 10px #a076ff22"
+                  : "0 1px 2px #00000009",
+                transition:
+                  "background 0.18s, color 0.18s, box-shadow 0.18s, border 0.18s, transform 0.16s",
                 "&:hover": {
-                  bgcolor: theme.palette.action.hover,
+                  background: hoverBg,
+                  color: activeColor,
+                  transform: "scale(1.025)",
+                },
+                "&:active": {
+                  background: "#ffedf5",
+                  color: "#ff4d88",
                 },
               }}
             >
               <ListItemIcon
                 sx={{
-                  minWidth: 40,
+                  minWidth: 36,
                   color: isActive ? activeColor : theme.palette.text.secondary,
+                  fontSize: 25,
+                  transition: "color 0.16s",
+                  "& svg": {
+                    fontSize: 24,
+                  },
                 }}
               >
                 {icon}
@@ -97,9 +141,10 @@ const MainSideBar = () => {
               <ListItemText
                 primary={text}
                 primaryTypographyProps={{
-                  fontWeight: isActive ? 600 : 500,
-                  fontSize: 14,
-                  color: theme.palette.text.primary,
+                  fontWeight: isActive ? 700 : 500,
+                  fontSize: 15,
+                  color: isActive ? activeColor : theme.palette.text.primary,
+                  letterSpacing: 0.3,
                 }}
               />
             </ListItem>

@@ -10,7 +10,7 @@ const apiService = axios.create({
 
 apiService.interceptors.request.use(
   (request) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("access_token");
     if (token) {
       request.headers["Authorization"] = `Bearer ${token}`;
     }
@@ -27,8 +27,8 @@ apiService.interceptors.response.use(
   },
   (error) => {
     if (error.response && error.response.status === 403) {
-      localStorage.removeItem("token");
-      window.location.href = "/login";
+      localStorage.removeItem("access_token");
+      window.location.href = "/";
     }
     return Promise.reject(error);
   }

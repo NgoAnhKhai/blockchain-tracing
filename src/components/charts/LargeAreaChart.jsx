@@ -6,14 +6,12 @@ import { useTheme } from "@mui/material";
 const LargeAreaChart = ({ txList }) => {
   const theme = useTheme();
 
-  // --- 1. Lọc chỉ 1 năm gần nhất
   const oneYearAgo = Date.now() - 365 * 24 * 3600 * 1000;
   const recentTx = useMemo(
     () => txList.filter((tx) => tx.timeStamp * 1000 >= oneYearAgo),
     [txList]
   );
 
-  // --- 2. Gom nhóm theo ngày → dates[] & counts[]
   const { dates, counts } = useMemo(() => {
     const map = {};
     recentTx.forEach((tx) => {
@@ -27,13 +25,11 @@ const LargeAreaChart = ({ txList }) => {
     };
   }, [recentTx]);
 
-  // --- 3. Tạo gradient giống sóng âm
   const gradient = new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-    { offset: 0, color: "#ff4d88" }, // top: đậm hồng
-    { offset: 1, color: "rgba(255,77,136,0.2)" }, // bottom: mờ dần
+    { offset: 0, color: "#ff4d88" },
+    { offset: 1, color: "rgba(255,77,136,0.2)" },
   ]);
 
-  // --- 4. Option cho ECharts
   const option = useMemo(
     () => ({
       backgroundColor: theme.palette.background.paper,

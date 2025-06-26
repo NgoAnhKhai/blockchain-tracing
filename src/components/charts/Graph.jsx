@@ -2,18 +2,20 @@ import React, { useRef, useState, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import Node from "../Node";
 import ParticleEdge from "./ParticleEdge";
-import {
-  InstancedMesh,
-  Object3D,
-  SphereGeometry,
-  MeshPhysicalMaterial,
-} from "three";
-export default function Graph({ center, children }) {
+
+export default function Graph({
+  center,
+  children, // [{address, type}]
+  onNodeClick,
+  centerColor = "#29fff6",
+  sentColor,
+  receivedColor,
+}) {
   const groupRef = useRef();
   const [isPaused, setIsPaused] = useState(false);
   const rotRef = useRef(0);
 
-  // Tính vị trí đều trên mặt cầu
+  // Vị trí đều trên mặt cầu
   const positions = useMemo(() => {
     const pts = [];
     const n = children.length;
@@ -27,7 +29,6 @@ export default function Graph({ center, children }) {
     return pts;
   }, [children.length]);
 
-  // Xoay group, giữ góc khi pause/resume
   useFrame((_, delta) => {
     if (!isPaused && groupRef.current) {
       rotRef.current += delta * 0.2;
@@ -35,22 +36,22 @@ export default function Graph({ center, children }) {
     }
   });
 
-  // Called by Node on hover
   const handleHover = (flag) => setIsPaused(flag);
 
   return (
     <group ref={groupRef}>
-      {/* Node cha */}
+      {/* Node trung tâm */}
       <Node
         address={center}
         position={[0, 0, 0]}
         isCenter
+        nodeColor={centerColor}
         onHover={handleHover}
+        onClick={() => onNodeClick && onNodeClick(center)}
       />
 
-      {children.map((addr, i) => (
-        <group key={addr}>
-          {/* Particle flow edge */}
+      {children.map((item, i) => (
+        <group key={item.address}>
           <ParticleEdge
             start={[0, 0, 0]}
             end={positions[i]}
@@ -58,9 +59,13 @@ export default function Graph({ center, children }) {
             radius={0.02}
             particleRadius={0.08}
           />
-
-          {/* Node con */}
-          <Node address={addr} position={positions[i]} onHover={handleHover} />
+          <Node
+            address={item.address}
+            position={positions[i]}
+            nodeColor={item.type === "sent" ? sentColor : receivedColor}
+            onHover={handleHover}
+            onClick={() => onNodeClick && onNodeClick(item.address)}
+          />
         </group>
       ))}
     </group>
