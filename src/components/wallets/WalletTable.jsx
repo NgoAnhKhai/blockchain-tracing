@@ -22,8 +22,6 @@ export default function WalletTable({
           <TableCell>Address</TableCell>
           <TableCell>Name Tag</TableCell>
           <TableCell>Balance</TableCell>
-          <TableCell>Rank</TableCell>
-          <TableCell>Percentage</TableCell>
           <TableCell align="right">Action</TableCell>
         </TableRow>
       </TableHead>

@@ -15,14 +15,13 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-
 import WalletSelector from "../components/WalletSelector";
 import LargeAreaChart from "../components/charts/LargeAreaChart";
 import WeeklyAreaChart from "../components/charts/WeeklyAreaChart";
 import { getTxList } from "../services/GetPopularWallet";
-import Loader from "../components/loading/Loading";
+import SmallLoader from "../components/loading/SmallLoader";
 
-const RECENT_COUNT = 8; // Số giao dịch hiển thị
+const RECENT_COUNT = 8;
 
 const HomePage = () => {
   const theme = useTheme();
@@ -31,7 +30,6 @@ const HomePage = () => {
   const [selectedWallet, setSelectedWallet] = useState(null);
   const [txList, setTxList] = useState([]);
 
-  // Khởi mặc định wallet
   useEffect(() => {
     if (!selectedWallet) {
       setSelectedWallet({
@@ -41,7 +39,6 @@ const HomePage = () => {
     }
   }, [selectedWallet]);
 
-  // Lấy danh sách tx khi wallet thay đổi
   useEffect(() => {
     if (selectedWallet) {
       setLoading(true);
@@ -52,20 +49,17 @@ const HomePage = () => {
     }
   }, [selectedWallet]);
 
-  // Lọc 1 năm gần nhất
   const oneYearAgo = Date.now() - 365 * 24 * 3600 * 1000;
   const filteredTx = useMemo(
     () => txList.filter((tx) => tx.timeStamp * 1000 >= oneYearAgo),
     [txList]
   );
 
-  // (Tuỳ chọn) sort giảm dần theo thời gian
   const sortedTx = useMemo(
     () => [...filteredTx].sort((a, b) => b.timeStamp - a.timeStamp),
     [filteredTx]
   );
 
-  // Chỉ lấy RECENT_COUNT giao dịch đầu
   const recentTx = useMemo(() => sortedTx.slice(0, RECENT_COUNT), [sortedTx]);
 
   const handleExpand = (route) => {
@@ -92,9 +86,6 @@ const HomePage = () => {
       time: "2 hrs ago",
     },
   ];
-  if (loading) {
-    return <Loader />;
-  }
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -109,13 +100,27 @@ const HomePage = () => {
       {/* Charts */}
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
         <Card sx={{ flex: 1, backgroundColor: "rgba(70, 14, 82, 0.08)" }}>
-          <CardContent>
-            <LargeAreaChart txList={txList} />
+          <CardContent
+            sx={{
+              minHeight: 220,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {loading ? <SmallLoader /> : <LargeAreaChart txList={txList} />}
           </CardContent>
         </Card>
         <Card sx={{ flex: 1, backgroundColor: "rgba(70, 14, 82, 0.08)" }}>
-          <CardContent>
-            <WeeklyAreaChart txList={txList} />
+          <CardContent
+            sx={{
+              minHeight: 220,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {loading ? <SmallLoader /> : <WeeklyAreaChart txList={txList} />}
           </CardContent>
         </Card>
       </Box>
@@ -130,7 +135,9 @@ const HomePage = () => {
             backgroundColor: "rgba(70, 14, 82, 0.08)",
           }}
         >
-          <CardContent>
+          <CardContent
+            sx={{ minHeight: 270, display: "flex", flexDirection: "column" }}
+          >
             <Box
               sx={{
                 display: "flex",
@@ -146,54 +153,68 @@ const HomePage = () => {
                 <OpenInNewIcon />
               </IconButton>
             </Box>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Tx Hash</TableCell>
-                  <TableCell sx={{ color: "#F028FD" }}>From</TableCell>
-                  <TableCell>To</TableCell>
-                  <TableCell sx={{ color: "#fd4d85" }}>Amount</TableCell>
-                  <TableCell>Time</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {recentTx.map((tx, idx) => (
-                  <TableRow
-                    key={idx}
-                    hover
-                    sx={{
-                      "&:nth-of-type(odd)": {
-                        backgroundColor: theme.palette.action.hover,
-                      },
-                    }}
-                  >
-                    <TableCell>{tx.hash.slice(0, 12)}…</TableCell>
-                    <TableCell
-                      sx={{
-                        color: "#F028FD",
-                        fontWeight: 700,
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      {tx.from.slice(0, 10)}…
-                    </TableCell>
-                    <TableCell>{tx.to?.slice(0, 10)}…</TableCell>
-                    <TableCell
-                      sx={{
-                        color: "#fd4d85",
-                        fontWeight: 700,
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      {(parseFloat(tx.value) / 1e18).toFixed(4)} ETH
-                    </TableCell>
-                    <TableCell>
-                      {new Date(tx.timeStamp * 1000).toLocaleString()}
-                    </TableCell>
+            {loading ? (
+              <Box
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: 160,
+                }}
+              >
+                <SmallLoader />
+              </Box>
+            ) : (
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Tx Hash</TableCell>
+                    <TableCell sx={{ color: "#F028FD" }}>From</TableCell>
+                    <TableCell>To</TableCell>
+                    <TableCell sx={{ color: "#fd4d85" }}>Amount</TableCell>
+                    <TableCell>Time</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {recentTx.map((tx, idx) => (
+                    <TableRow
+                      key={idx}
+                      hover
+                      sx={{
+                        "&:nth-of-type(odd)": {
+                          backgroundColor: theme.palette.action.hover,
+                        },
+                      }}
+                    >
+                      <TableCell>{tx.hash.slice(0, 12)}…</TableCell>
+                      <TableCell
+                        sx={{
+                          color: "#F028FD",
+                          fontWeight: 700,
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        {tx.from.slice(0, 10)}…
+                      </TableCell>
+                      <TableCell>{tx.to?.slice(0, 10)}…</TableCell>
+                      <TableCell
+                        sx={{
+                          color: "#fd4d85",
+                          fontWeight: 700,
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        {(parseFloat(tx.value) / 1e18).toFixed(4)} ETH
+                      </TableCell>
+                      <TableCell>
+                        {new Date(tx.timeStamp * 1000).toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
 
@@ -205,7 +226,9 @@ const HomePage = () => {
             backgroundColor: "rgba(70, 14, 82, 0.08)",
           }}
         >
-          <CardContent>
+          <CardContent
+            sx={{ minHeight: 270, display: "flex", flexDirection: "column" }}
+          >
             <Box
               sx={{
                 display: "flex",
@@ -218,39 +241,53 @@ const HomePage = () => {
                 <OpenInNewIcon />
               </IconButton>
             </Box>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Severity</TableCell>
-                  <TableCell>Wallet</TableCell>
-                  <TableCell>Alert Type</TableCell>
-                  <TableCell>Time</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {alertData.map((row, idx) => (
-                  <TableRow
-                    key={idx}
-                    sx={{
-                      "&:nth-of-type(odd)": {
-                        backgroundColor: theme.palette.action.hover,
-                      },
-                    }}
-                  >
-                    <TableCell>
-                      <Chip
-                        label={row.severity}
-                        color={row.severity === "High" ? "error" : "warning"}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{row.wallet}</TableCell>
-                    <TableCell>{row.type}</TableCell>
-                    <TableCell>{row.time}</TableCell>
+            {loading ? (
+              <Box
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: 120,
+                }}
+              >
+                <SmallLoader />
+              </Box>
+            ) : (
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Severity</TableCell>
+                    <TableCell>Wallet</TableCell>
+                    <TableCell>Alert Type</TableCell>
+                    <TableCell>Time</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {alertData.map((row, idx) => (
+                    <TableRow
+                      key={idx}
+                      sx={{
+                        "&:nth-of-type(odd)": {
+                          backgroundColor: theme.palette.action.hover,
+                        },
+                      }}
+                    >
+                      <TableCell>
+                        <Chip
+                          label={row.severity}
+                          color={row.severity === "High" ? "error" : "warning"}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>{row.wallet}</TableCell>
+                      <TableCell>{row.type}</TableCell>
+                      <TableCell>{row.time}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </Box>

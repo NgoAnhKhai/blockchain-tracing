@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Box,
   Card,
@@ -16,60 +17,70 @@ import {
   IconButton,
   useTheme,
   Paper,
+  Chip,
 } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
-import SearchingBar from "../components/searching/SearchingBar"; // import component tìm kiếm của bạn
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import SmallLoader from "../components/loading/SmallLoader";
+import { getTxList } from "../services/GetPopularWallet"; // hàm lấy txList theo address
 
-const TransactionsPage = () => {
+const PAGE_SIZE = 10;
+
+// Định nghĩa "giao dịch quan trọng"
+const isImportant = (tx) => parseFloat(tx.value) / 1e18 > 100;
+
+export default function TransactionsPage() {
   const theme = useTheme();
-
-  // ----------------------
-  // DỮ LIỆU MẪU (hardcode)
-  // ----------------------
-  const fromOptions = ["0x103ed...313", "0x22f8...d123", "0x06fa...e07"];
-  const toOptions = ["0x103ed...313", "0x22f8...a523", "0x06fa...e07"];
-  const tokenOptions = ["ETH", "USDT", "DAI"];
-  const timeOptions = ["Last 5 mins", "Last hour", "Today", "This week"];
-
-  const sampleTxs = Array.from({ length: 10 }).map((_, idx) => ({
-    hash: `0x103ed...${300 + idx}`,
-    from: "0x103ed...313",
-    to: "0x103ed...313",
-    amount: `${(Math.random() * 5 + 1).toFixed(2)} ETH`,
-    token: "ETH",
-    time: `${2 + idx} sec ago`,
-  }));
-
-  // ----------------------
-  // STATE CHO FILTERS
-  // ----------------------
-  const [filterFrom, setFilterFrom] = useState("");
-  const [filterTo, setFilterTo] = useState("");
-  const [filterToken, setFilterToken] = useState("");
-  const [filterTime, setFilterTime] = useState("");
-
+  const [searchParams] = useSearchParams();
+  const address = searchParams.get("address");
+  const [txList, setTxList] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = 80;
+  const [amountFilter, setAmountFilter] = useState("all");
 
-  const handleFromChange = (e) => {
-    setFilterFrom(e.target.value);
-  };
-  const handleToChange = (e) => {
-    setFilterTo(e.target.value);
-  };
-  const handleTokenChange = (e) => {
-    setFilterToken(e.target.value);
-  };
-  const handleTimeChange = (e) => {
-    setFilterTime(e.target.value);
-  };
+  // Gọi API lấy transactions theo address
+  useEffect(() => {
+    if (!address) return;
+    setLoading(true);
+    getTxList(address).then((txs) => {
+      setTxList(txs || []);
+      setLoading(false);
+    });
+  }, [address]);
 
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
-  };
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  };
+  // Lọc theo amount filter
+  const filteredTxList = useMemo(() => {
+    switch (amountFilter) {
+      case "1":
+        return txList.filter((tx) => parseFloat(tx.value) / 1e18 > 1);
+      case "10":
+        return txList.filter((tx) => parseFloat(tx.value) / 1e18 > 10);
+      case "100":
+        return txList.filter((tx) => parseFloat(tx.value) / 1e18 > 100);
+      default:
+        return txList;
+    }
+  }, [txList, amountFilter]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredTxList.length / PAGE_SIZE);
+  const paginatedTx = useMemo(
+    () =>
+      filteredTxList.slice(
+        (currentPage - 1) * PAGE_SIZE,
+        currentPage * PAGE_SIZE
+      ),
+    [filteredTxList, currentPage]
+  );
+
+  const handlePrevPage = () => setCurrentPage((p) => Math.max(p - 1, 1));
+  const handleNextPage = () =>
+    setCurrentPage((p) => Math.min(p + 1, totalPages));
+
+  // Reset page nếu filter đổi
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [amountFilter]);
 
   return (
     <Box
@@ -89,219 +100,171 @@ const TransactionsPage = () => {
           gap: 2,
         }}
       >
-        {/* =======================
-            PHẦN TÌM KIẾM (SearchingBar)
-        ======================== */}
-
+        {/* Tiêu đề với icon sinh động */}
         <Card
           sx={{
-            backgroundColor: theme.palette.background.paper,
-            borderRadius: 1,
+            background: "linear-gradient(90deg, #170048 50%, #30236e 100%)",
+            borderRadius: 2,
+            boxShadow: "0 6px 36px #8a2be267",
+            color: "#fff",
           }}
         >
           <CardContent>
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 2,
-                alignItems: "center",
-              }}
-            >
-              {/* From */}
-              <FormControl sx={{ minWidth: 150 }} size="small">
-                <InputLabel sx={{ color: theme.palette.text.primary }}>
-                  From
-                </InputLabel>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+              <AccountBalanceWalletIcon
+                sx={{ fontSize: 38, color: "#fd4d85" }}
+              />
+              <Typography
+                variant="h5"
+                fontWeight={700}
+                sx={{
+                  letterSpacing: 1,
+                  color: "#fd4d85",
+                  textShadow: "0 2px 8px #fd4d8555, 0 1px 8px #7a6cff77",
+                  mr: 1,
+                }}
+              >
+                Transactions
+              </Typography>
+              <Chip
+                label={address?.slice(0, 8) + "..." + address?.slice(-5)}
+                color="secondary"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: 18,
+                  bgcolor: "#262065",
+                  color: "#fff",
+                  letterSpacing: 1,
+                  px: 2,
+                  borderRadius: 2,
+                  boxShadow: "0 2px 12px #fd4d8555",
+                }}
+              />
+            </Box>
+            {/* Nút Filter */}
+            <Box sx={{ mt: 1 }}>
+              <FormControl size="small" sx={{ minWidth: 170 }}>
+                <InputLabel>Filter by Amount</InputLabel>
                 <Select
-                  value={filterFrom}
-                  label="From"
-                  onChange={handleFromChange}
+                  value={amountFilter}
+                  label="Filter by Amount"
+                  onChange={(e) => setAmountFilter(e.target.value)}
                   sx={{
-                    bgcolor:
-                      theme.palette.mode === "dark"
-                        ? theme.palette.background.default
-                        : "rgba(255,255,255,0.8)",
-                    color: theme.palette.text.primary,
-                    borderRadius: 1,
+                    bgcolor: "#25144c",
+                    color: "#fff",
+                    fontWeight: 700,
                   }}
                 >
-                  <MenuItem value="">
-                    <em>None</em>
-                  </MenuItem>
-                  {fromOptions.map((addr, idx) => (
-                    <MenuItem key={idx} value={addr}>
-                      {addr}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              {/* To */}
-              <FormControl sx={{ minWidth: 150 }} size="small">
-                <InputLabel sx={{ color: theme.palette.text.primary }}>
-                  To
-                </InputLabel>
-                <Select
-                  value={filterTo}
-                  label="To"
-                  onChange={handleToChange}
-                  sx={{
-                    bgcolor:
-                      theme.palette.mode === "dark"
-                        ? theme.palette.background.default
-                        : "rgba(255,255,255,0.8)",
-                    color: theme.palette.text.primary,
-                    borderRadius: 1,
-                  }}
-                >
-                  <MenuItem value="">
-                    <em>None</em>
-                  </MenuItem>
-                  {toOptions.map((addr, idx) => (
-                    <MenuItem key={idx} value={addr}>
-                      {addr}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              {/* Token */}
-              <FormControl sx={{ minWidth: 120 }} size="small">
-                <InputLabel sx={{ color: theme.palette.text.primary }}>
-                  Token
-                </InputLabel>
-                <Select
-                  value={filterToken}
-                  label="Token"
-                  onChange={handleTokenChange}
-                  sx={{
-                    bgcolor:
-                      theme.palette.mode === "dark"
-                        ? theme.palette.background.default
-                        : "rgba(255,255,255,0.8)",
-                    color: theme.palette.text.primary,
-                    borderRadius: 1,
-                  }}
-                >
-                  <MenuItem value="">
-                    <em>None</em>
-                  </MenuItem>
-                  {tokenOptions.map((tok, idx) => (
-                    <MenuItem key={idx} value={tok}>
-                      {tok}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              {/* Time */}
-              <FormControl sx={{ minWidth: 150 }} size="small">
-                <InputLabel sx={{ color: theme.palette.text.primary }}>
-                  Time
-                </InputLabel>
-                <Select
-                  value={filterTime}
-                  label="Time"
-                  onChange={handleTimeChange}
-                  sx={{
-                    bgcolor:
-                      theme.palette.mode === "dark"
-                        ? theme.palette.background.default
-                        : "rgba(255,255,255,0.8)",
-                    color: theme.palette.text.primary,
-                    borderRadius: 1,
-                  }}
-                >
-                  <MenuItem value="">
-                    <em>None</em>
-                  </MenuItem>
-                  {timeOptions.map((t, idx) => (
-                    <MenuItem key={idx} value={t}>
-                      {t}
-                    </MenuItem>
-                  ))}
+                  <MenuItem value="all">All</MenuItem>
+                  <MenuItem value="1">{"> 1 ETH"}</MenuItem>
+                  <MenuItem value="10">{"> 10 ETH"}</MenuItem>
+                  <MenuItem value="100">{"> 100 ETH"}</MenuItem>
                 </Select>
               </FormControl>
             </Box>
           </CardContent>
         </Card>
 
-        {/* =======================
-            PHẦN BẢNG TRANSACTIONS
-        ======================== */}
+        {/* Table Transactions */}
         <Paper
           sx={{
             width: "100%",
             overflowX: "auto",
             backgroundColor: theme.palette.background.paper,
-            borderRadius: 1, // bo góc nhẹ
+            borderRadius: 2,
+            mt: 0,
           }}
         >
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  sx={{ fontWeight: "bold", color: theme.palette.text.primary }}
-                >
-                  Tx Hash
-                </TableCell>
-                <TableCell
-                  sx={{ fontWeight: "bold", color: theme.palette.text.primary }}
-                >
-                  From
-                </TableCell>
-                <TableCell
-                  sx={{ fontWeight: "bold", color: theme.palette.text.primary }}
-                >
-                  To
-                </TableCell>
-                <TableCell
-                  sx={{ fontWeight: "bold", color: theme.palette.text.primary }}
-                >
-                  Amount
-                </TableCell>
-                <TableCell
-                  sx={{ fontWeight: "bold", color: theme.palette.text.primary }}
-                >
-                  Token
-                </TableCell>
-                <TableCell
-                  sx={{ fontWeight: "bold", color: theme.palette.text.primary }}
-                >
-                  Time
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {sampleTxs.map((tx, idx) => (
-                <TableRow key={idx}>
-                  <TableCell sx={{ color: theme.palette.text.secondary }}>
-                    {tx.hash}
+          {loading ? (
+            <Box sx={{ py: 8, textAlign: "center" }}>
+              <SmallLoader />
+            </Box>
+          ) : (
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Tx Hash</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>From</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>To</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: "#fd4d85" }}>
+                    Amount
                   </TableCell>
-                  <TableCell sx={{ color: theme.palette.text.secondary }}>
-                    {tx.from}
-                  </TableCell>
-                  <TableCell sx={{ color: theme.palette.text.secondary }}>
-                    {tx.to}
-                  </TableCell>
-                  <TableCell sx={{ color: theme.palette.text.secondary }}>
-                    {tx.amount}
-                  </TableCell>
-                  <TableCell sx={{ color: theme.palette.text.secondary }}>
-                    {tx.token}
-                  </TableCell>
-                  <TableCell sx={{ color: theme.palette.text.secondary }}>
-                    {tx.time}
-                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Time</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          {/* =======================
-              PHẦN PAGINATION
-          ======================== */}
+              </TableHead>
+              <TableBody>
+                {paginatedTx.map((tx, idx) => (
+                  <TableRow
+                    key={idx}
+                    sx={
+                      isImportant(tx)
+                        ? {
+                            background:
+                              "linear-gradient(90deg, #fd4d8522 0%, #fff0 100%)",
+                            boxShadow: "0 1px 12px #fd4d8540",
+                            fontWeight: 700,
+                          }
+                        : {
+                            transition: "background 0.2s",
+                            "&:hover": {
+                              background: "#26144c22",
+                            },
+                          }
+                    }
+                  >
+                    <TableCell>
+                      <span
+                        style={
+                          isImportant(tx)
+                            ? { color: "#fd4d85", fontWeight: 700 }
+                            : {}
+                        }
+                      >
+                        {tx.hash.slice(0, 14)}…
+                      </span>
+                    </TableCell>
+                    <TableCell>{tx.from?.slice(0, 12)}…</TableCell>
+                    <TableCell>{tx.to?.slice(0, 12)}…</TableCell>
+                    <TableCell
+                      sx={{
+                        color: isImportant(tx)
+                          ? "#fd4d85"
+                          : theme.palette.text.primary,
+                        fontWeight: isImportant(tx) ? 800 : 600,
+                      }}
+                    >
+                      {(parseFloat(tx.value) / 1e18).toFixed(4)} ETH
+                      {isImportant(tx) && (
+                        <Chip
+                          label="Large"
+                          size="small"
+                          color="error"
+                          sx={{
+                            ml: 1,
+                            fontWeight: 700,
+                            fontSize: 11,
+                            bgcolor: "#fd4d85",
+                            color: "#fff",
+                          }}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(tx.timeStamp * 1000).toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {paginatedTx.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      No transactions found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+          {/* Pagination */}
           <Box
             sx={{
               display: "flex",
@@ -337,6 +300,4 @@ const TransactionsPage = () => {
       </Box>
     </Box>
   );
-};
-
-export default TransactionsPage;
+}

@@ -1,328 +1,206 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Card,
-  CardContent,
   Typography,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Switch,
-  FormControlLabel,
   Button,
+  Avatar,
+  TextField,
   Divider,
-  useTheme,
 } from "@mui/material";
+import DiscordIcon from "../assets/discord.png"; // icon discord png
 
-const SettingPage = () => {
-  const theme = useTheme();
+const ProfilePage = () => {
+  // Profile info
+  const [profile, setProfile] = useState({
+    firstName: "Ahmad",
+    lastName: "Saris",
+    email: "ahmadsaris@gmail.com",
+    phone: "+1 03203202",
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+  });
+  const [webhook, setWebhook] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingWebhook, setSavingWebhook] = useState(false);
 
-  // ----------------------
-  // State DEMO (có thể lưu vào localStorage / API thực)
-  // ----------------------
-  const [walletAddress, setWalletAddress] = useState("0x6fa...e07");
-  const [darkMode, setDarkMode] = useState(theme.palette.mode === "dark");
-  const [language, setLanguage] = useState("en");
-  const [notifLargeTx, setNotifLargeTx] = useState(true);
-  const [notifSurge, setNotifSurge] = useState(false);
-  const [notifUnusual, setNotifUnusual] = useState(false);
-  const [passphrase, setPassphrase] = useState("");
-
-  useEffect(() => {
-    const savedMode = localStorage.getItem("darkMode");
-    if (savedMode !== null) {
-      setDarkMode(savedMode === "true");
-    }
-  }, []);
-
- 
-  useEffect(() => {
-    localStorage.setItem("darkMode", darkMode.toString());
-  }, [darkMode]);
-
-  // ----------------------
-  // Handler
-  // ----------------------
-  const handleThemeChange = (e) => {
-    setDarkMode(e.target.checked);
-  };
-  const handleLanguageChange = (e) => {
-    setLanguage(e.target.value);
-  };
-  const handleNotifLargeTx = (e) => {
-    setNotifLargeTx(e.target.checked);
-  };
-  const handleNotifSurge = (e) => {
-    setNotifSurge(e.target.checked);
-  };
-  const handleNotifUnusual = (e) => {
-    setNotifUnusual(e.target.checked);
-  };
-  const handlePassphraseChange = (e) => {
-    setPassphrase(e.target.value);
-  };
-
-  const handleDisconnectWallet = () => {
-    // Gọi hàm disconnect ví thực tế ở đây
-    alert("Wallet disconnected (demo).");
-    setWalletAddress("");
-  };
+  // Edit profile handler
   const handleSaveProfile = () => {
-    // Gọi API lưu profile / preferences
-    alert("Profile & Preferences saved (demo).");
+    setSavingProfile(true);
+    setTimeout(() => {
+      setSavingProfile(false);
+      alert("Profile saved!");
+    }, 900);
   };
-  const handleChangePassphrase = () => {
-    // Gọi API thay đổi passphrase
-    alert(`Passphrase changed to "${passphrase}" (demo).`);
-    setPassphrase("");
-  };
-  const handleLogoutAll = () => {
-    // Gọi API logout tất cả devices
-    alert("Logged out from all devices (demo).");
-  };
-  const handleDeleteAccount = () => {
-    // Gọi API delete account
-    alert("Account deleted (demo).");
+
+  // Save webhook handler
+  const handleSaveWebhook = () => {
+    setSavingWebhook(true);
+    setTimeout(() => {
+      setSavingWebhook(false);
+      alert("Webhook saved!");
+    }, 900);
   };
 
   return (
     <Box
       sx={{
-        p: 2,
-        bgcolor: theme.palette.background.default,
-        color: theme.palette.text.primary,
         minHeight: "100vh",
+        color: "#fff",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        gap: 5,
+        px: 4,
+        py: 7,
       }}
     >
+      {/* Left: Profile Info */}
+      <Card
+        sx={{
+          width: 370,
+          p: 4,
+          bgcolor: "#231d34",
+          borderRadius: 5,
+          boxShadow: "0 8px 40px #a076ff28",
+          border: "1.5px solid #2d283c",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+          <Avatar src={profile.avatar} sx={{ width: 72, height: 72 }} />
+          <Box>
+            <Typography variant="h6" fontWeight={700}>
+              {profile.firstName} {profile.lastName}
+            </Typography>
+            <Typography fontSize={13} color="#ccc">
+              User Profile
+            </Typography>
+          </Box>
+        </Box>
+        <TextField
+          label="First Name"
+          value={profile.firstName}
+          onChange={(e) =>
+            setProfile({ ...profile, firstName: e.target.value })
+          }
+          size="small"
+          fullWidth
+          sx={{ mb: 2, input: { color: "#fff" } }}
+        />
+        <TextField
+          label="Last Name"
+          value={profile.lastName}
+          onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
+          size="small"
+          fullWidth
+          sx={{ mb: 2, input: { color: "#fff" } }}
+        />
+        <TextField
+          label="Email Address"
+          value={profile.email}
+          onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+          size="small"
+          fullWidth
+          sx={{ mb: 2, input: { color: "#fff" } }}
+        />
+        <TextField
+          label="Phone Number"
+          value={profile.phone}
+          onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+          size="small"
+          fullWidth
+          sx={{ mb: 3, input: { color: "#fff" } }}
+        />
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{
+            borderRadius: 2,
+            fontWeight: 700,
+            width: "100%",
+            py: 1.2,
+            fontSize: 16,
+          }}
+          onClick={handleSaveProfile}
+          disabled={savingProfile}
+        >
+          {savingProfile ? "Saving..." : "Save Profile"}
+        </Button>
+      </Card>
+
+      {/* Right: Discord Webhook & Data Verify */}
       <Box
         sx={{
-          maxWidth: "1000px",
-          margin: "0 auto",
+          flex: 1,
+          maxWidth: 450,
           display: "flex",
           flexDirection: "column",
           gap: 3,
         }}
       >
-
-        {/* === 1. Profile Settings === */}
+        {/* Discord Webhook */}
         <Card
           sx={{
-            backgroundColor: theme.palette.background.paper,
-            borderRadius: 1,
+            p: 4,
+            bgcolor: "#231d34",
+            borderRadius: 5,
+            boxShadow: "0 8px 40px #a076ff28",
+            border: "1.5px solid #2d283c",
+            mb: 2,
           }}
         >
-          <CardContent>
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
-            >
-              <TextField
-                label="Wallet Address"
-                value={walletAddress}
-                InputProps={{
-                  readOnly: true,
-                }}
-                size="small"
-                sx={{ borderRadius: 1 }}
-              />
-
-              <Button
-                variant="outlined"
-                color="warning"
-                onClick={handleDisconnectWallet}
-                sx={{ alignSelf: "flex-start", borderRadius: 1 }}
-              >
-                Disconnect Wallet
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* === 2. Theme & Preferences === */}
-        <Card
-          sx={{
-            backgroundColor: theme.palette.background.paper,
-            borderRadius: 1,
-          }}
-        >
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Theme & Preferences
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+            <img src={DiscordIcon} width={38} alt="discord" />
+            <Typography variant="h6" fontWeight={700}>
+              Discord Webhook Config
             </Typography>
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
-            >
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={darkMode}
-                    onChange={handleThemeChange}
-                    color="primary"
-                  />
-                }
-                label="Enable Dark Mode"
-              />
-
-              <FormControl sx={{ minWidth: 180 }} size="small">
-                <InputLabel sx={{ color: theme.palette.text.primary }}>
-                  Language
-                </InputLabel>
-                <Select
-                  value={language}
-                  label="Language"
-                  onChange={handleLanguageChange}
-                  sx={{
-                    bgcolor:
-                      theme.palette.mode === "dark"
-                        ? theme.palette.background.default
-                        : "rgba(255,255,255,0.8)",
-                    color: theme.palette.text.primary,
-                    borderRadius: 1,
-                  }}
-                >
-                  <MenuItem value="en">English</MenuItem>
-                  <MenuItem value="vi">Tiếng Việt</MenuItem>
-                  <MenuItem value="es">Español</MenuItem>
-                  <MenuItem value="zh">中文</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* === 3. Notification Settings === */}
-        <Card
-          sx={{
-            backgroundColor: theme.palette.background.paper,
-            borderRadius: 1,
-          }}
-        >
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Notification Settings
-            </Typography>
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 1 }}
-            >
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={notifLargeTx}
-                    onChange={handleNotifLargeTx}
-                    color="error"
-                  />
-                }
-                label="Large Transaction Alerts"
-              />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={notifSurge}
-                    onChange={handleNotifSurge}
-                    color="warning"
-                  />
-                }
-                label="Surge in Activity Alerts"
-              />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={notifUnusual}
-                    onChange={handleNotifUnusual}
-                    color="info"
-                  />
-                }
-                label="Unusual Behavior Alerts"
-              />
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* === 4. Security & Privacy === */}
-        <Card
-          sx={{
-            backgroundColor: theme.palette.background.paper,
-            borderRadius: 1,
-          }}
-        >
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Security & Privacy
-            </Typography>
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
-            >
-              <TextField
-                label="Change Passphrase"
-                type="password"
-                value={passphrase}
-                onChange={handlePassphraseChange}
-                size="small"
-                sx={{ borderRadius: 1 }}
-                placeholder="Enter new passphrase"
-              />
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleChangePassphrase}
-                sx={{ width: "fit-content", borderRadius: 1 }}
-              >
-                Save Passphrase
-              </Button>
-
-              <Divider sx={{ my: 2 }} />
-
-              <Button
-                variant="outlined"
-                color="secondary"
-                onClick={handleLogoutAll}
-                sx={{ width: "fit-content", borderRadius: 1 }}
-              >
-                Logout from All Devices
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* === 5. Account Actions === */}
-        <Card
-          sx={{
-            backgroundColor: theme.palette.background.paper,
-            borderRadius: 1,
-          }}
-        >
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Account Actions
-            </Typography>
-            <Box sx={{ mt: 1 }}>
-              <Button
-                variant="contained"
-                color="error"
-                onClick={handleDeleteAccount}
-                sx={{ borderRadius: 1 }}
-              >
-                Delete Account
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* === Lưu tất cả Changes === */}
-        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+          </Box>
+          <TextField
+            label="Discord Webhook URL"
+            value={webhook}
+            onChange={(e) => setWebhook(e.target.value)}
+            fullWidth
+            size="small"
+            sx={{ mb: 2, input: { color: "#fff" } }}
+            placeholder="https://discord.com/api/webhooks/..."
+          />
           <Button
             variant="contained"
-            color="success"
-            onClick={handleSaveProfile}
-            sx={{ borderRadius: 1 }}
+            sx={{
+              background: "linear-gradient(90deg, #7289da 0%, #ff4d88 100%)",
+              color: "#fff",
+              borderRadius: 2,
+              fontWeight: 700,
+              px: 3,
+              py: 1.2,
+              fontSize: 16,
+            }}
+            onClick={handleSaveWebhook}
+            disabled={savingWebhook}
           >
-            Save All Settings
+            {savingWebhook ? "Saving..." : "Save Webhook"}
           </Button>
-        </Box>
+        </Card>
+
+        {/* Data Verify - tuỳ ý bạn thêm hoặc bỏ */}
+        <Card
+          sx={{
+            p: 4,
+            bgcolor: "#231d34",
+            borderRadius: 5,
+            boxShadow: "0 8px 40px #a076ff28",
+            border: "1.5px solid #2d283c",
+          }}
+        >
+          <Typography variant="h6" fontWeight={700} mb={2}>
+            Data Verification
+          </Typography>
+          <Typography fontSize={15}>
+            This section will display data verify or KYC features...
+          </Typography>
+        </Card>
       </Box>
     </Box>
   );
 };
 
-export default SettingPage;
+export default ProfilePage;

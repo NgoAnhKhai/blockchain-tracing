@@ -25,7 +25,6 @@ const menuItems = [
   { text: "Dashboard", icon: <HomeIcon />, path: "/" },
   { text: "Trace Wallet", icon: <WalletIcon />, path: "/trace-wallets" },
   { text: "Wallet Graph", icon: <GraphIcon />, path: "/wallet-graph" },
-  { text: "Transactions", icon: <TransactionsIcon />, path: "/transactions" },
   { text: "Alerts", icon: <AlertIcon />, path: "/alerts" },
   { text: "Settings", icon: <SettingsIcon />, path: "/settings" },
 ];

@@ -39,7 +39,7 @@ const FollowFilterSwitcher = ({ filter, setFilter }) => {
               px: "12px",
             }}
           >
-            {option === "all" ? "All Wallets" : "Followed Only"}
+            {option === "all" ? "Featured Wallets" : "Followed Only"}
           </Button>
         );
       })}
