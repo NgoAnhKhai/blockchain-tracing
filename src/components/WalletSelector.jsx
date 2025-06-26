@@ -18,11 +18,7 @@ const famousWallets = [
     address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
     color: "#9C27B0",
   },
-  {
-    label: "Binance 14",
-    address: "0x3f16D1d89a76F3C6a53C3b91D0a213c5A92e7E52",
-    color: "#FFB300",
-  },
+
   {
     label: "Coinbase",
     address: "0x503828976D22510aad0201ac7EC88293211D23Da",

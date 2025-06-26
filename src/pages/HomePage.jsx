@@ -22,7 +22,7 @@ import WeeklyAreaChart from "../components/charts/WeeklyAreaChart";
 import { getTxList } from "../services/GetPopularWallet";
 import Loader from "../components/loading/Loading";
 
-const RECENT_COUNT = 8; // Số giao dịch hiển thị
+const RECENT_COUNT = 8;
 
 const HomePage = () => {
   const theme = useTheme();
@@ -31,7 +31,6 @@ const HomePage = () => {
   const [selectedWallet, setSelectedWallet] = useState(null);
   const [txList, setTxList] = useState([]);
 
-  // Khởi mặc định wallet
   useEffect(() => {
     if (!selectedWallet) {
       setSelectedWallet({
