@@ -3,7 +3,14 @@ import { useFrame } from "@react-three/fiber";
 import Node from "../Node";
 import ParticleEdge from "./ParticleEdge";
 
-export default function Graph({ center, children, onNodeClick }) {
+export default function Graph({
+  center,
+  children, // [{address, type}]
+  onNodeClick,
+  centerColor = "#29fff6",
+  sentColor,
+  receivedColor,
+}) {
   const groupRef = useRef();
   const [isPaused, setIsPaused] = useState(false);
   const rotRef = useRef(0);
@@ -38,12 +45,13 @@ export default function Graph({ center, children, onNodeClick }) {
         address={center}
         position={[0, 0, 0]}
         isCenter
+        nodeColor={centerColor}
         onHover={handleHover}
         onClick={() => onNodeClick && onNodeClick(center)}
       />
 
-      {children.map((addr, i) => (
-        <group key={addr}>
+      {children.map((item, i) => (
+        <group key={item.address}>
           <ParticleEdge
             start={[0, 0, 0]}
             end={positions[i]}
@@ -52,10 +60,11 @@ export default function Graph({ center, children, onNodeClick }) {
             particleRadius={0.08}
           />
           <Node
-            address={addr}
+            address={item.address}
             position={positions[i]}
+            nodeColor={item.type === "sent" ? sentColor : receivedColor}
             onHover={handleHover}
-            onClick={() => onNodeClick && onNodeClick(addr)}
+            onClick={() => onNodeClick && onNodeClick(item.address)}
           />
         </group>
       ))}

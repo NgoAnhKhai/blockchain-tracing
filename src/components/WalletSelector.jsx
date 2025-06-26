@@ -1,4 +1,3 @@
-// src/components/WalletSelector.jsx
 import React from "react";
 import {
   Box,

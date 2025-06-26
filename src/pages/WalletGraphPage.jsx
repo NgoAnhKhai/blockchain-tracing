@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Box } from "@mui/material";
 import ThreeGraphView from "../components/charts/ThreeGraphView";
 import D3GraphView from "../components/charts/D3GraphView";
 import RightSideBar from "../components/sidebar/RightSideBar";
 import { useViewMode } from "../context/ViewModeContext";
 import { useAddressSearch } from "../context/AddressSearchContext";
 import { getTraceWallet } from "../services/dgraph/GetTraceWallet";
+import { GetWalletTransaction } from "../services/dgraph/GetWalletTransaction";
+import { Box, IconButton } from "@mui/material";
+import MenuOpenIcon from "@mui/icons-material/MenuOpen";
+import BlockchainLoading from "../components/loading/BlockchainLoading";
 
 export default function WalletGraphPage() {
   const { viewMode } = useViewMode();
@@ -23,11 +26,9 @@ export default function WalletGraphPage() {
 
     const fetchData = async () => {
       try {
+        await GetWalletTransaction(address);
         const res = await getTraceWallet(address.toLowerCase());
-
-        console.log("Graph Data: ", res);
-        const data = res[0] || null;
-        setGraphData(data);
+        setGraphData(res || null);
       } catch (error) {
         setGraphData(null);
         console.error("API getTraceWallet error:", error);
@@ -50,22 +51,36 @@ export default function WalletGraphPage() {
     const sent = graphData.sent ?? [];
     const received = graphData.received ?? [];
     const addrs = new Set();
-
     sent.forEach((tx) => addrs.add(tx.to?.address));
     received.forEach((tx) => addrs.add(tx.from?.address));
-
-    // Log ra cho dễ kiểm tra
-    console.log("All unique node addresses:", Array.from(addrs));
-    console.log("Total nodes:", 1 + addrs.size);
-
     return 1 + addrs.size; // 1 là node trung tâm
   }, [graphData]);
 
   const show3D =
     graphData && typeof totalNodeCount === "number" && totalNodeCount <= 100;
 
+  // ==== Đây là nút menu mở sidebar ====
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Menu IconButton cố định ở cạnh phải */}
+      <IconButton
+        sx={{
+          position: "fixed",
+          bottom: "50%",
+          right: 20,
+          zIndex: 1202,
+          bgcolor: "rgba(0,0,0,0.34)",
+          color: "#fff",
+          boxShadow: "0 2px 16px #0004",
+          ":hover": { bgcolor: "rgba(80,80,120,0.72)" },
+        }}
+        size="large"
+        onClick={() => setSidebarOpen((prev) => !prev)}
+        aria-label="Toggle sidebar"
+      >
+        <MenuOpenIcon fontSize="large" />
+      </IconButton>
+
       <Box sx={{ flex: 1, display: "flex", position: "relative" }}>
         {loading && (
           <Box
@@ -75,16 +90,16 @@ export default function WalletGraphPage() {
               right: 0,
               top: 0,
               bottom: 0,
+              zIndex: 99,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              zIndex: 2,
-              bgcolor: "rgba(255,255,255,0.65)",
             }}
           >
-            Đang tải dữ liệu...
+            <BlockchainLoading />
           </Box>
         )}
+
         {!loading && graphData ? (
           show3D && viewMode === "3d" ? (
             <ThreeGraphView data={graphData} onNodeClick={handleNodeClick} />

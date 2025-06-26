@@ -13,6 +13,16 @@ export default function WalletTableRow({
   onRowClick,
   formatAddress,
 }) {
+  function formatBalance(balance) {
+    const num = Number(balance);
+    if (isNaN(num)) return balance;
+    if (num >= 1e12) return (num / 1e12).toFixed(2) + "T";
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + "K";
+    return num.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  }
+
   return (
     <TableRow
       key={row.address}
@@ -42,39 +52,14 @@ export default function WalletTableRow({
         {row.name_tag || "--"}
       </TableCell>
       <TableCell sx={{ color: "#ff4d88", fontWeight: 700, fontSize: 16 }}>
-        {row.balance}
+        {formatBalance(row.balance)}
       </TableCell>
-      <TableCell
-        sx={{
-          fontWeight: "bold",
-          color: row.rank <= 3 ? "#ff4d88" : "#fff",
-          fontSize: 16,
-        }}
-      >
-        <RankCup rank={row.rank} />
-        {row.rank}
-      </TableCell>
-      <TableCell>
-        <Box
-          component="span"
-          sx={{
-            bgcolor: "#2e1440",
-            color: "#00ffe7",
-            px: 1.5,
-            py: 0.5,
-            borderRadius: 2,
-            fontWeight: 700,
-            fontSize: 13,
-            display: "inline-block",
-          }}
-        >
-          {row.percentage}
-        </Box>
-      </TableCell>
+
       <TableCell align="right">
         <FollowButton
           isFollowed={row.is_followed}
           walletAddress={row.address}
+          walletId={row.id}
           onStatusChange={onToggleFollow}
         />
       </TableCell>

@@ -9,11 +9,16 @@ export default function D3GraphView({ data, onNodeClick }) {
     const received = data.received ?? [];
     const edges = [];
     sent.forEach((tx) => {
-      if (tx.to?.address) edges.push({ from: data.address, to: tx.to.address });
+      if (tx.to?.address)
+        edges.push({ from: data.address, to: tx.to.address, type: "sent" });
     });
     received.forEach((tx) => {
       if (tx.from?.address)
-        edges.push({ from: tx.from.address, to: data.address });
+        edges.push({
+          from: tx.from.address,
+          to: data.address,
+          type: "received",
+        });
     });
     return edges;
   }, [data]);
@@ -27,7 +32,6 @@ export default function D3GraphView({ data, onNodeClick }) {
     return set;
   }, [d3Data]);
   console.log("[D3GraphView] Tổng số node:", nodeSet.size);
-
   return (
     <Box sx={{ flex: 1 }}>
       <WalletGraph

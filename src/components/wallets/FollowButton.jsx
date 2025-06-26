@@ -8,18 +8,14 @@ import { UnsubscribeWallet } from "../../services/follow/UnsubscribeWallet";
 export default function FollowButton({
   isFollowed,
   walletAddress,
+  walletId,
   onStatusChange,
 }) {
   const handleToggle = async (e) => {
     e.stopPropagation();
-    const addr = walletAddress.toLowerCase();
     try {
-      if (isFollowed) {
-        await UnsubscribeWallet(addr);
-      } else {
-        await SubscribeWallet(addr);
-      }
-      onStatusChange(addr, !isFollowed);
+      // Gọi API, xử lý như cũ (có thể bỏ API ở đây, chỉ cần ở Page, hoặc giữ cũng được)
+      onStatusChange(walletId, walletAddress, isFollowed);
     } catch (err) {
       console.error("Follow/unfollow failed", err);
     }

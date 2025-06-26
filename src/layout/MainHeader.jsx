@@ -21,6 +21,7 @@ import { useAuth } from "../context/AuthContext";
 
 export default function MainHeader() {
   const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { viewMode, setViewMode } = useViewMode();
@@ -55,17 +56,9 @@ export default function MainHeader() {
           zIndex: 1000,
         }}
       >
-        {/* Left */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            flex: 1,
-            minWidth: 300,
-            gap: 2,
-          }}
-        >
-          <Box sx={{ flex: 1, maxWidth: 500 }}>
+        {/* Left: Thanh tìm kiếm + Toggle */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ minWidth: 200, maxWidth: 360 }}>
             <SearchingBar />
           </Box>
           {showToggle && (
@@ -74,6 +67,15 @@ export default function MainHeader() {
               value={viewMode}
               exclusive
               onChange={(e, v) => v && setViewMode(v)}
+              sx={{
+                ml: 1,
+                background: theme.palette.background.default,
+                borderRadius: 2,
+                height: 38,
+                boxShadow: isDark
+                  ? "0 2px 10px #2d265a22"
+                  : "0 1px 2px #cdc2ff11",
+              }}
             >
               <ToggleButton value="2d">2D</ToggleButton>
               <ToggleButton value="3d">3D</ToggleButton>
@@ -81,7 +83,7 @@ export default function MainHeader() {
           )}
         </Box>
 
-        {/* Right */}
+        {/* Right: Auth/User Info */}
         <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
           {!user ? (
             <>

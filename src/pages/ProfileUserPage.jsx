@@ -1,20 +1,21 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getUserProfile } from "../services/GetUserProfile";
+import ProfileContent from "../components/setting/ProfileContent";
+import EditContent from "../components/setting/EditContent";
 
-const DEFAULT_AVATAR =
-  "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+import SwitchButtonVertical from "../components/button/SwitchButtonVertical";
+import ProfileSkeleton from "../components/skeleton/ProfileSkeloton";
 
-const ProfileUserPage = () => {
+export default function ProfileUserPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState("profile");
 
   useEffect(() => {
     (async () => {
       try {
         const data = await getUserProfile();
-        console.log("User profile data:", data);
-
-        setUser(data.data);
+        setUser(data);
       } catch {
         setUser(null);
       }
@@ -22,56 +23,39 @@ const ProfileUserPage = () => {
     })();
   }, []);
 
-  if (loading)
-    return (
-      <div style={{ textAlign: "center", padding: 48, color: "#bbb" }}>
-        Loading profile...
-      </div>
-    );
-
-  if (!user)
-    return (
-      <div style={{ textAlign: "center", padding: 48, color: "#ff4d88" }}>
-        Không tìm thấy thông tin người dùng.
-      </div>
-    );
-
   return (
     <div
       style={{
-        maxWidth: 520,
-        margin: "4rem auto",
-        display: "flex",
-        background: "rgba(24,18,44,0.98)",
-        borderRadius: 18,
-        boxShadow: "0 4px 32px 0 rgba(90,0,120,0.14)",
-        padding: 36,
-        alignItems: "center",
-        border: "1px solid #22223b",
+        position: "relative",
       }}
     >
-      <img
-        src={DEFAULT_AVATAR}
-        alt="User avatar"
+      <SwitchButtonVertical tab={tab} setTab={setTab} />
+
+      {/* Nội dung tab */}
+      <div
         style={{
-          width: 120,
-          height: 120,
-          borderRadius: "50%",
-          objectFit: "cover",
-          boxShadow: "0 2px 12px #bb86fc77",
-          border: "3px solid #da00ff",
-          marginRight: 36,
+          marginRight: 200,
+          padding: "64px 0",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-start",
         }}
-      />
-      <div>
-        <h2 style={{ margin: "0 0 6px 0", color: "#fff" }}>
-          User: {user.username}
-        </h2>
-        <p style={{ color: "#bb86fc", margin: 0 }}>Email: {user.email}</p>
-        <p style={{ color: "#fff", margin: "14px 0 0 0" }}>Role: {user.role}</p>
+      >
+        {loading && (
+          <div style={{ textAlign: "center", padding: 48, color: "#bbb" }}>
+            <ProfileSkeleton />
+          </div>
+        )}
+        {!loading && !user && (
+          <div style={{ textAlign: "center", padding: 48, color: "#ff4d88" }}>
+            Không tìm thấy thông tin người dùng.
+          </div>
+        )}
+        {!loading && user && tab === "profile" && (
+          <ProfileContent user={user} />
+        )}
+        {!loading && user && tab === "edit" && <EditContent user={user} />}
       </div>
     </div>
   );
-};
-
-export default ProfileUserPage;
+}

@@ -15,6 +15,11 @@ const WeeklyAreaChart = () => {
   const option = useMemo(() => {
     return {
       backgroundColor: theme.palette.background.paper,
+      title: {
+        text: "Alert Overview (Weekly)",
+        left: "center",
+        textStyle: { color: theme.palette.text.primary },
+      },
       tooltip: {
         trigger: "axis",
       },

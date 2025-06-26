@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Box, InputBase, Typography, useTheme } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { useAddressSearch } from "../../context/AddressSearchContext";
@@ -9,13 +9,24 @@ const SearchingBar = () => {
   const inputRef = useRef(null);
   const { address, setAddress } = useAddressSearch();
 
-  const handleInputChange = (e) => setAddress(e.target.value);
+  // State cho input local, sync theo address khi address thay đổi từ ngoài
+  const [inputValue, setInputValue] = useState(address || "");
 
-  // Bắt phím Enter, log ra để test
+  // Cập nhật input khi address context thay đổi (khi search xong hoặc từ ngoài set)
+  useEffect(() => {
+    setInputValue(address || "");
+  }, [address]);
+
+  // Chỉ update inputValue, không update address global
+  const handleInputChange = (e) => setInputValue(e.target.value);
+
+  // Khi nhấn Enter, mới setAddress (tức là mới thực sự search)
   const handleInputKeyDown = (e) => {
     if (e.key === "Enter") {
-      console.log("Address searched:", address);
-      // TODO: Sau này dispatch hoặc call API tiếp
+      setAddress(inputValue.trim());
+      // Có thể clear inputValue nếu muốn
+      // setInputValue("");
+      console.log("Address searched:", inputValue.trim());
     }
   };
 
@@ -61,7 +72,7 @@ const SearchingBar = () => {
       />
       <InputBase
         inputRef={inputRef}
-        value={address}
+        value={inputValue}
         onChange={handleInputChange}
         onKeyDown={handleInputKeyDown}
         placeholder="Search"

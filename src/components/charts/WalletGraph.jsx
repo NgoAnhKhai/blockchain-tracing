@@ -1,6 +1,22 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import * as d3 from "d3";
 import { useTheme } from "@mui/material";
+
+function randomPastelColor() {
+  const hue = Math.floor(Math.random() * 360);
+  return `hsl(${hue}, 75%, 72%)`;
+}
+function getHue(hsl) {
+  return parseInt(hsl.match(/hsl\((\d+),/)[1], 10);
+}
+function generate2DistinctPastel() {
+  let color1 = randomPastelColor();
+  let color2 = randomPastelColor();
+  while (Math.abs(getHue(color1) - getHue(color2)) < 70) {
+    color2 = randomPastelColor();
+  }
+  return [color1, color2];
+}
 
 export default function WalletGraph({
   data,
@@ -12,15 +28,20 @@ export default function WalletGraph({
   const theme = useTheme();
   const ref = useRef();
 
+  const [sentColor, receivedColor] = useMemo(generate2DistinctPastel, [center]);
+
   useEffect(() => {
-    // Xây node/link từ edges
     const nodesMap = new Map();
     const links = [];
     data.forEach(({ from, to }) => {
-      if (!nodesMap.has(from))
-        nodesMap.set(from, { id: from, isCenter: from === center });
-      if (!nodesMap.has(to))
-        nodesMap.set(to, { id: to, isCenter: to === center });
+      if (!nodesMap.has(center))
+        nodesMap.set(center, { id: center, isCenter: true, type: "center" });
+      if (from === center && !nodesMap.has(to)) {
+        nodesMap.set(to, { id: to, isCenter: false, type: "sent" });
+      }
+      if (to === center && !nodesMap.has(from)) {
+        nodesMap.set(from, { id: from, isCenter: false, type: "received" });
+      }
       links.push({ source: from, target: to });
     });
     const nodes = Array.from(nodesMap.values());
@@ -29,7 +50,6 @@ export default function WalletGraph({
       d.y = Math.random() * height;
     });
 
-    // Init SVG
     const svg = d3.select(ref.current);
     svg.selectAll("*").remove();
     svg
@@ -39,7 +59,6 @@ export default function WalletGraph({
 
     const container = svg.append("g");
 
-    // Zoom + Pan
     const zoomBehavior = d3
       .zoom()
       .scaleExtent([0.2, 5])
@@ -54,7 +73,6 @@ export default function WalletGraph({
       });
     svg.call(zoomBehavior);
 
-    // 2) defs: drop shadow + gradients
     const defs = container.append("defs");
     defs
       .append("filter")
@@ -66,7 +84,6 @@ export default function WalletGraph({
       .attr("flood-color", "#111")
       .attr("flood-opacity", 0.5);
 
-    // Node trung tâm (cha) - gradient tím xanh neon
     const gradCenter = defs.append("radialGradient").attr("id", "grad-center");
     gradCenter.append("stop").attr("offset", "0%").attr("stop-color", "#fff");
     gradCenter
@@ -78,22 +95,7 @@ export default function WalletGraph({
       .attr("offset", "100%")
       .attr("stop-color", "#6d21ff");
 
-    // Node con - gradient xanh dương neon/cam
-    const gradChild = defs.append("radialGradient").attr("id", "grad-child");
-    gradChild.append("stop").attr("offset", "0%").attr("stop-color", "#ffeedd");
-    gradChild
-      .append("stop")
-      .attr("offset", "70%")
-      .attr("stop-color", "#00ffe7");
-    gradChild
-      .append("stop")
-      .attr("offset", "100%")
-      .attr("stop-color", "#33c6ff");
-
-    // Link màu neon xanh nhạt
     const linkColor = "#00ffe799";
-
-    // Draw links
     container
       .append("g")
       .attr("stroke", linkColor)
@@ -102,20 +104,23 @@ export default function WalletGraph({
       .join("line")
       .attr("stroke-width", 2)
       .attr("stroke-linecap", "round");
-
-    // Draw nodes
     const node = container
       .append("g")
       .selectAll("circle")
       .data(nodes)
       .join("circle")
-      .attr("r", (d) => (d.isCenter ? 26 : 12))
+      .attr("r", (d) => (d.isCenter ? 26 : 14))
       .attr("fill", (d) =>
-        d.isCenter ? "url(#grad-center)" : "url(#grad-child)"
+        d.isCenter
+          ? "url(#grad-center)"
+          : d.type === "sent"
+          ? sentColor
+          : receivedColor
       )
       .attr("filter", "url(#drop-shadow)")
-      .attr("stroke", (d) => (d.isCenter ? "#fff" : "#00ffe7"))
+      .attr("stroke", (d) => (d.isCenter ? "#fff" : "#444"))
       .attr("stroke-width", (d) => (d.isCenter ? 4 : 2))
+      .style("cursor", "pointer")
       .on("click", (e, d) => onNodeClick?.(d.id));
 
     node
@@ -123,16 +128,34 @@ export default function WalletGraph({
         d3.select(this)
           .transition()
           .duration(160)
-          .attr("r", d.isCenter ? 32 : 16);
+          .attr("r", d.isCenter ? 32 : 18);
       })
       .on("mouseout", function (event, d) {
         d3.select(this)
           .transition()
           .duration(160)
-          .attr("r", d.isCenter ? 26 : 12);
+          .attr("r", d.isCenter ? 26 : 14);
       });
 
-    // Tick
+    node.call(
+      d3
+        .drag()
+        .on("start", function (event, d) {
+          if (!event.active) simulation.alphaTarget(0.3).restart();
+          d.fx = d.x;
+          d.fy = d.y;
+        })
+        .on("drag", function (event, d) {
+          d.fx = event.x;
+          d.fy = event.y;
+        })
+        .on("end", function (event, d) {
+          if (!event.active) simulation.alphaTarget(0);
+          d.fx = null;
+          d.fy = null;
+        })
+    );
+
     const simulation = d3
       .forceSimulation(nodes)
       .force(
@@ -149,7 +172,7 @@ export default function WalletGraph({
         "collide",
         d3
           .forceCollide()
-          .radius((d) => (d.isCenter ? 40 : 24))
+          .radius((d) => (d.isCenter ? 40 : 22))
           .strength(1)
       );
     simulation.on("tick", () => {
@@ -164,7 +187,79 @@ export default function WalletGraph({
     });
 
     return () => simulation.stop();
-  }, [data, center, width, height, theme, onNodeClick]);
+  }, [
+    data,
+    center,
+    width,
+    height,
+    theme,
+    onNodeClick,
+    sentColor,
+    receivedColor,
+  ]);
 
-  return <svg ref={ref} style={{ width: "100%", height: "100%" }} />;
+  // Legend
+  return (
+    <div style={{ width: "100%", height: "100%", position: "relative" }}>
+      <svg ref={ref} style={{ width: "100%", height: "100%" }} />
+      <div
+        style={{
+          position: "absolute",
+          right: 18,
+          bottom: 18,
+          background: "rgba(28,24,45,0.93)",
+          borderRadius: 12,
+          boxShadow: "0 2px 16px #6d21ff24",
+          padding: "10px 20px",
+          fontSize: 15,
+          color: "#eee",
+          zIndex: 9,
+          minWidth: 140,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 6 }}>
+          <span
+            style={{
+              display: "inline-block",
+              width: 18,
+              height: 18,
+              borderRadius: "50%",
+              background: "linear-gradient(120deg,#bb86fc,#6d21ff 80%)",
+              marginRight: 9,
+              border: "2.5px solid #fff",
+            }}
+          />
+          Main node (center)
+        </div>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 6 }}>
+          <span
+            style={{
+              display: "inline-block",
+              width: 18,
+              height: 18,
+              borderRadius: "50%",
+              background: sentColor,
+              marginRight: 9,
+              border: "2px solid #444",
+            }}
+          />
+          Sent node (sent)
+        </div>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <span
+            style={{
+              display: "inline-block",
+              width: 18,
+              height: 18,
+              borderRadius: "50%",
+              background: receivedColor,
+              marginRight: 9,
+              border: "2px solid #444",
+            }}
+          />
+          Received node (received)
+        </div>
+      </div>
+    </div>
+  );
 }
