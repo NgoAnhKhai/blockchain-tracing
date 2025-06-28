@@ -74,10 +74,13 @@ const WalletGraphSearchBar = () => {
         onClick={doSearch}
         sx={{
           p: 0.7,
-          color: "#b486ff",
+          color: isDark ? "#fff" : "#b486ff",
           bgcolor: "transparent",
-          transition: "color .18s",
-          "&:hover": { color: "#fff", bgcolor: "#b486ff" },
+          transition: "color .18s, background .18s",
+          "&:hover": {
+            color: "#fff",
+            bgcolor: "#b486ff",
+          },
         }}
       >
         <SearchIcon sx={{ fontSize: 26 }} />
@@ -87,15 +90,15 @@ const WalletGraphSearchBar = () => {
         value={inputValue}
         onChange={handleInputChange}
         onKeyDown={handleInputKeyDown}
-        placeholder="Search wallet address"
+        placeholder="Search wallet address…"
         sx={{
-          color: "#fff",
+          color: isDark ? "#fff" : "#392461",
           flex: 1,
           fontSize: 18,
           fontWeight: 500,
           ml: 1,
-          "::placeholder": {
-            color: "#b199d2",
+          "&::placeholder": {
+            color: isDark ? "#b199d2" : "#876bb5",
             opacity: 1,
             fontWeight: 400,
           },
@@ -103,9 +106,9 @@ const WalletGraphSearchBar = () => {
       />
       <Typography
         sx={{
-          color: "#b486ff",
+          color: isDark ? "#e5cbff" : "#b486ff",
           fontSize: 13,
-          background: "#281c48",
+          background: isDark ? "#281c48" : "#ede6fb",
           px: 1.5,
           py: "3px",
           borderRadius: "7px",

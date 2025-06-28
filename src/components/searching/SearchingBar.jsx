@@ -69,10 +69,13 @@ const SearchingBar = () => {
         onClick={doSearch}
         sx={{
           p: 0.7,
-          color: "#a076ff",
+          color: isDark ? "#fff" : "#a076ff",
           bgcolor: "transparent",
-          transition: "color .18s",
-          "&:hover": { color: "#fff", bgcolor: "#a076ff" },
+          transition: "color .18s, background .18s",
+          "&:hover": {
+            color: "#fff",
+            bgcolor: "#a076ff",
+          },
         }}
       >
         <SearchIcon sx={{ fontSize: 26 }} />
@@ -84,13 +87,13 @@ const SearchingBar = () => {
         onKeyDown={handleInputKeyDown}
         placeholder="Search wallet address…"
         sx={{
-          color: "#fff",
+          color: isDark ? "#fff" : "#392461",
           flex: 1,
           fontSize: 18,
           fontWeight: 500,
           ml: 1,
-          "::placeholder": {
-            color: "#b199d2",
+          "&::placeholder": {
+            color: isDark ? "#b199d2" : "#876bb5",
             opacity: 1,
             fontWeight: 400,
           },
@@ -98,9 +101,9 @@ const SearchingBar = () => {
       />
       <Typography
         sx={{
-          color: "#a076ff",
+          color: isDark ? "#e5cbff" : "#a076ff",
           fontSize: 13,
-          background: "#261c40",
+          background: isDark ? "#261c40" : "#ede6fb",
           px: 1.5,
           py: "3px",
           borderRadius: "7px",
