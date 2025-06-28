@@ -2,9 +2,8 @@ import React from "react";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import WalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import Box from "@mui/material/Box";
+
 import FollowButton from "./FollowButton";
-import RankCup from "../common/RankCup";
 import { useTheme } from "@mui/material";
 
 export default function WalletTableRow({
