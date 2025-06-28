@@ -23,6 +23,12 @@ import SmallLoader from "../components/loading/SmallLoader";
 import { getTxList } from "../services/GetPopularWallet";
 import { GetAlertsDetailUser } from "../services/AIModel/GetAlertsDetailUser";
 import RelatedAlertsTable from "../components/RelatedAlertsTable";
+import { GetFeaturedWallet } from "../services/wallets/GetFeaturedWallet";
+
+const DEFAULT_WALLET = {
+  address: "0x8315177ab297ba92a06054ce80a67ed4dbd7ed3a",
+  label: "LayerZero Executor", // hoặc tên gì cũng được
+};
 
 const RECENT_COUNT = 8;
 
@@ -30,7 +36,8 @@ const HomePage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
 
-  const [selectedWallet, setSelectedWallet] = useState(null);
+  const [featuredWallets, setFeaturedWallets] = useState([]);
+  const [selectedWallet, setSelectedWallet] = useState(DEFAULT_WALLET);
   const [txList, setTxList] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,6 +45,58 @@ const HomePage = () => {
   const [alertDetail, setAlertDetail] = useState(null);
   const [alertLoading, setAlertLoading] = useState(false);
   const [alertError, setAlertError] = useState("");
+
+  // ===== Fetch Featured Wallets (2 ví nổi bật) =====
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await GetFeaturedWallet();
+        let list = data?.slice(0, 2) || [];
+        // Ensure DEFAULT_WALLET is always first and unique
+        if (
+          !list.some(
+            (w) =>
+              (w.address || w.wallet_address || "").toLowerCase() ===
+              DEFAULT_WALLET.address.toLowerCase()
+          )
+        ) {
+          list = [DEFAULT_WALLET, ...list.slice(0, 1)];
+        } else {
+          // Đảm bảo DEFAULT_WALLET nằm đầu list
+          list = [
+            list.find(
+              (w) =>
+                (w.address || w.wallet_address || "").toLowerCase() ===
+                DEFAULT_WALLET.address.toLowerCase()
+            ),
+            ...list.filter(
+              (w) =>
+                (w.address || w.wallet_address || "").toLowerCase() !==
+                DEFAULT_WALLET.address.toLowerCase()
+            ),
+          ].slice(0, 2);
+        }
+        setFeaturedWallets(list);
+      } catch (e) {
+        setFeaturedWallets([DEFAULT_WALLET]);
+      }
+    })();
+  }, []);
+
+  // ===== Auto-select ví đầu tiên khi có featuredWallets (và lần đầu load thôi) =====
+  useEffect(() => {
+    if (
+      featuredWallets.length > 0 &&
+      (!selectedWallet || !selectedWallet.address)
+    ) {
+      setSelectedWallet({
+        ...featuredWallets[0],
+        address:
+          featuredWallets[0].address || featuredWallets[0].wallet_address,
+      });
+    }
+    // eslint-disable-next-line
+  }, [featuredWallets]);
 
   // ===== Fetch Transactions =====
   useEffect(() => {
@@ -57,7 +116,6 @@ const HomePage = () => {
     setAlertLoading(true);
     setAlertError("");
     setAlertDetail(null);
-    // Fetch alert
     (async () => {
       try {
         const data = await GetAlertsDetailUser(selectedWallet.address);
@@ -104,21 +162,6 @@ const HomePage = () => {
   }
   const isImportant = (tx) => parseFloat(tx.value) / 1e18 > 100;
 
-  // ===== Map Alert data for Table =====
-  const alertRows = useMemo(() => {
-    if (!alertDetail || !alertDetail.modelResponse) return [];
-    const { modelResponse, additionalInfo } = alertDetail;
-    return [
-      {
-        severity: modelResponse.risk_level || "Normal",
-        wallet: shortAddr(modelResponse.address),
-        type: modelResponse.prediction || "Normal",
-        summary: modelResponse.summarize,
-        time: additionalInfo?.["Detection Time"] || "--",
-      },
-    ];
-  }, [alertDetail]);
-
   // Accent màu hồng tím
   const accent = theme.palette.primary.main;
   const accentLight = theme.palette.primary.light;
@@ -141,8 +184,14 @@ const HomePage = () => {
       {/* Selector */}
       <Box sx={{ px: 3, pt: 1, display: "flex", justifyContent: "flex-end" }}>
         <WalletSelector
+          wallets={featuredWallets}
           selected={selectedWallet}
-          onSelect={setSelectedWallet}
+          onSelect={(wallet) => {
+            setSelectedWallet({
+              ...wallet,
+              address: wallet.address || wallet.wallet_address,
+            });
+          }}
         />
       </Box>
 
@@ -400,6 +449,7 @@ const HomePage = () => {
           </CardContent>
         </Card>
 
+        {/* Risk Alerts */}
         <Card
           sx={{
             flex: 1,
