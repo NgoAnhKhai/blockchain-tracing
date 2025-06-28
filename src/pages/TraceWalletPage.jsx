@@ -651,11 +651,7 @@ const TraceWalletPage = () => {
           <Card
             sx={{ flex: 1, backgroundColor: theme.palette.background.paper }}
           >
-            <RelatedAlertsTable
-              walletId={id}
-              navigate={navigate}
-              forceFollow={detail?.is_following}
-            />
+            <RelatedAlertsTable walletId={id} navigate={navigate} />
           </Card>
         </Box>
       </Box>

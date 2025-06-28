@@ -14,16 +14,9 @@ import {
   TableBody,
   Chip,
   Fade,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
 } from "@mui/material";
-import LockIcon from "@mui/icons-material/Lock";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { GetAlertsDetailUser } from "../services/AIModel/GetAlertsDetailUser";
-import { GetObservations } from "../services/follow/GetObservations";
 
 function formatNumberShort(n) {
   if (!n || isNaN(Number(n))) return n;
@@ -45,44 +38,12 @@ function formatDateTime(dt) {
 
 const riskColor = { LOW: "#1ecc7a", MEDIUM: "#ffad33", HIGH: "#ff4d4f" };
 
-export default function RelatedAlertsTable({
-  walletId,
-  navigate,
-  forceFollow,
-}) {
+export default function RelatedAlertsTable({ walletId, navigate }) {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [followed, setFollowed] = useState(false);
-  const [checkingFollow, setCheckingFollow] = useState(true);
-  const [openPopup, setOpenPopup] = useState(false);
 
   useEffect(() => {
-    if (typeof forceFollow === "boolean") {
-      setFollowed(forceFollow);
-      setCheckingFollow(false);
-      return;
-    }
     if (!walletId) return;
-    setCheckingFollow(true);
-    (async () => {
-      try {
-        const res = await GetObservations();
-        const list = res?.observations || [];
-        const found = list.some(
-          (obs) =>
-            obs.wallet_info?.address?.toLowerCase() === walletId.toLowerCase()
-        );
-        setFollowed(found);
-      } catch (e) {
-        setFollowed(false);
-      } finally {
-        setCheckingFollow(false);
-      }
-    })();
-  }, [walletId, forceFollow]);
-
-  useEffect(() => {
-    if (!walletId || !followed) return;
     setLoading(true);
     (async () => {
       try {
@@ -94,7 +55,7 @@ export default function RelatedAlertsTable({
         setLoading(false);
       }
     })();
-  }, [walletId, followed]);
+  }, [walletId]);
 
   const AlertsTableUI = () =>
     alerts && alerts.length ? (
@@ -181,30 +142,6 @@ export default function RelatedAlertsTable({
       </Fade>
     );
 
-  if (checkingFollow) {
-    return (
-      <Card
-        sx={{
-          flex: 1,
-          backgroundColor: "background.paper",
-          minWidth: 320,
-          p: 0,
-          boxShadow: "0 2px 18px #2b174322",
-          borderRadius: 4,
-          overflow: "hidden",
-        }}
-      >
-        <CardContent sx={{ p: 2 }}>
-          <Skeleton
-            variant="rectangular"
-            height={120}
-            sx={{ borderRadius: 2 }}
-          />
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card
       sx={{
@@ -218,15 +155,7 @@ export default function RelatedAlertsTable({
         position: "relative",
       }}
     >
-      <CardContent
-        sx={{
-          p: 2,
-          filter: !followed ? "blur(6px)" : "none",
-          pointerEvents: !followed ? "none" : "auto",
-          transition: "filter .23s",
-          position: "relative",
-        }}
-      >
+      <CardContent sx={{ p: 2 }}>
         <Box
           sx={{
             display: "flex",
@@ -238,7 +167,7 @@ export default function RelatedAlertsTable({
           <Typography variant="h6" fontWeight={700}>
             Related Alerts
           </Typography>
-          {alerts.length === 7 && followed && (
+          {alerts.length === 7 && (
             <Tooltip title="Show all alerts">
               <IconButton
                 size="small"
@@ -258,80 +187,16 @@ export default function RelatedAlertsTable({
             </Tooltip>
           )}
         </Box>
-        {loading && followed ? (
+        {loading ? (
           <Skeleton
             variant="rectangular"
             height={120}
             sx={{ borderRadius: 2 }}
           />
-        ) : followed ? (
-          <AlertsTableUI />
         ) : (
-          <Box sx={{ minHeight: 120 }} />
+          <AlertsTableUI />
         )}
       </CardContent>
-
-      {/* Icon khoá giữa bảng nếu chưa follow */}
-      {!followed && (
-        <Box
-          sx={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            zIndex: 6,
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            pointerEvents: "auto",
-            userSelect: "none",
-            cursor: "pointer",
-            bgcolor: "rgba(24,14,34,0.27)",
-          }}
-          onClick={() => setOpenPopup(true)}
-        >
-          <LockIcon sx={{ fontSize: 46, color: "#b69af7", mb: 1 }} />
-          <Typography color="text.secondary" fontWeight={600}>
-            Follow this wallet to unlock alerts
-          </Typography>
-        </Box>
-      )}
-
-      {/* Popup thông báo */}
-      <Dialog
-        open={openPopup}
-        onClose={() => setOpenPopup(false)}
-        maxWidth="xs"
-        PaperProps={{
-          sx: { borderRadius: 3, p: 2, textAlign: "center" },
-        }}
-      >
-        <DialogTitle sx={{ fontWeight: 800, color: "#b69af7" }}>
-          Alerts Locked
-        </DialogTitle>
-        <DialogContent>
-          <Typography sx={{ color: "#9d83c6", mb: 1 }}>
-            You must follow this wallet to view alerts.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: "center" }}>
-          <Button
-            onClick={() => setOpenPopup(false)}
-            sx={{
-              bgcolor: "#b69af7",
-              color: "#fff",
-              px: 3,
-              fontWeight: 700,
-              borderRadius: 2,
-              "&:hover": { bgcolor: "#9e23c9" },
-            }}
-          >
-            OK
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Card>
   );
 }

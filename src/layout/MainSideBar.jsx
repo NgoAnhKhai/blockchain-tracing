@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import {
   List,
   ListItem,
@@ -7,6 +7,8 @@ import {
   Divider,
   useTheme,
   Box,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -18,6 +20,7 @@ import {
 
 import ToggleMode from "../components/button/ToggleMode";
 import { ThemeContext } from "../context/theme";
+import { useAuth } from "../context/AuthContext";
 
 const LOGO_SRC = "/block_trace.png";
 
@@ -33,6 +36,10 @@ const MainSideBar = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { isDark, toggleTheme } = useContext(ThemeContext);
+  const { isAuthenticated } = useAuth();
+
+  // State điều khiển snackbar
+  const [showLoginSnack, setShowLoginSnack] = useState(false);
 
   const activeBg = isDark
     ? "linear-gradient(90deg, #342e51 0%, #7051f3 120%)"
@@ -40,6 +47,18 @@ const MainSideBar = () => {
   const activeColor = isDark ? "#ff4d88" : "#7051f3";
   const hoverBg = isDark ? "#221d37" : "#f0eef9";
   const borderActive = isDark ? "#a076ff77" : "#c4a9fc88";
+
+  const handleMenuClick = (path) => {
+    if (path === "/") {
+      navigate(path);
+      return;
+    }
+    if (!isAuthenticated()) {
+      setShowLoginSnack(true);
+      return;
+    }
+    navigate(path);
+  };
 
   return (
     <Box
@@ -54,7 +73,6 @@ const MainSideBar = () => {
         boxShadow: isDark ? "4px 0 16px #a076ff18" : "4px 0 16px #ded5ff11",
       }}
     >
-      {/* Header logo */}
       <Box
         sx={{
           p: 2,
@@ -89,6 +107,7 @@ const MainSideBar = () => {
           }}
         />
       </Box>
+
       {/* Menu */}
       <List>
         {menuItems.map(({ text, icon, path }) => {
@@ -96,7 +115,7 @@ const MainSideBar = () => {
           return (
             <ListItem
               key={text}
-              onClick={() => navigate(path)}
+              onClick={() => handleMenuClick(path)}
               sx={{
                 mb: 0.5,
                 mx: 1,
@@ -154,7 +173,6 @@ const MainSideBar = () => {
 
       <Divider sx={{ bgcolor: theme.palette.divider, mt: "auto" }} />
 
-      {/* Footer: Toggle Dark/Light */}
       <Box
         sx={{
           px: 2,
@@ -164,6 +182,30 @@ const MainSideBar = () => {
       >
         <ToggleMode isDark={isDark} toggleTheme={toggleTheme} />
       </Box>
+
+      <Snackbar
+        open={showLoginSnack}
+        autoHideDuration={4000}
+        onClose={() => setShowLoginSnack(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setShowLoginSnack(false)}
+          severity="warning"
+          variant="filled"
+          sx={{
+            fontWeight: 600,
+            fontSize: 16,
+            letterSpacing: 0.3,
+            bgcolor: isDark ? "#22123d" : "#ffe7e3",
+            color: isDark ? "#ff6d90" : "#b83241",
+            border: isDark ? "2px solid #b69af7" : "2px solid #d399af",
+            boxShadow: "0 2px 16px #a076ff33",
+          }}
+        >
+          You need to login to view this page.
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
