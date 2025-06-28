@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Environment } from "@react-three/drei";
 import Graph from "./Graph";
-import { Box } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 
 function randomPastelColor() {
   const hue = Math.floor(Math.random() * 360);
@@ -20,6 +20,9 @@ function gen2Colors() {
 }
 
 export default function ThreeGraphView({ data, onNodeClick }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
+
   const center = data?.address || "";
 
   const children = useMemo(() => {
@@ -55,6 +58,13 @@ export default function ThreeGraphView({ data, onNodeClick }) {
     if (onNodeClick) onNodeClick(addr);
   };
 
+  // CHỌN MÀU LEGEND THEO THEME
+  const legendBg = isDark ? "rgba(32,28,54,0.93)" : "rgba(255,255,255,0.92)";
+  const legendBorder = isDark ? "#4736a1" : "#e7dafc";
+  const textColor = isDark ? "#fff" : "#2c1860";
+  const nodeBorder = isDark ? "#fff" : "#432381";
+  const centerNodeColor = "#29fff6";
+
   return (
     <Box sx={{ flex: 1, overflow: "hidden", position: "relative" }}>
       <Canvas
@@ -77,7 +87,7 @@ export default function ThreeGraphView({ data, onNodeClick }) {
           center={center}
           children={children}
           onNodeClick={handleNodeSelect}
-          centerColor="#29fff6"
+          centerColor={centerNodeColor}
           sentColor={sentColor}
           receivedColor={receivedColor}
         />
@@ -89,36 +99,45 @@ export default function ThreeGraphView({ data, onNodeClick }) {
           right: 20,
           bottom: 16,
           zIndex: 22,
-          background: "rgba(30,25,48,0.9)",
-          padding: "12px 18px",
+          background: legendBg,
+          color: textColor,
+          padding: "13px 19px",
           borderRadius: 12,
           fontSize: 14,
+          border: `1.5px solid ${legendBorder}`,
+          boxShadow: isDark ? "0 4px 18px #4328b322" : "0 2px 14px #c9b1ff22",
+          minWidth: 160,
+          transition: "background 0.3s, border 0.3s, color 0.3s",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 6 }}>
           <span
             style={{
               width: 16,
               height: 16,
               borderRadius: "50%",
-              marginRight: 8,
-              background: "#29fff6",
-              border: "2px solid #fff",
+              marginRight: 10,
+              background: centerNodeColor,
+              border: `2.5px solid ${nodeBorder}`,
+              boxShadow: isDark
+                ? "0 2px 10px #23f5ef55"
+                : "0 1px 5px #29fff677",
             }}
           />
-          Main Node (center)
+          <span>Main Node (center)</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 6 }}>
           <span
             style={{
               width: 16,
               height: 16,
               borderRadius: "50%",
-              marginRight: 8,
+              marginRight: 10,
               background: sentColor,
+              border: `2.5px solid ${nodeBorder}`,
             }}
           />
-          Sent Node (sent)
+          <span>Sent Node (sent)</span>
         </div>
         <div style={{ display: "flex", alignItems: "center" }}>
           <span
@@ -126,11 +145,12 @@ export default function ThreeGraphView({ data, onNodeClick }) {
               width: 16,
               height: 16,
               borderRadius: "50%",
-              marginRight: 8,
+              marginRight: 10,
               background: receivedColor,
+              border: `2.5px solid ${nodeBorder}`,
             }}
           />
-          Received Node (received)
+          <span>Received Node (received)</span>
         </div>
       </div>
     </Box>

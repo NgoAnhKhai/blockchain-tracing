@@ -38,7 +38,6 @@ export default function WalletSelector({ selected, onSelect }) {
     async function fetchWallets() {
       try {
         const data = await GetFeaturedWallet();
-        console.log("data:", data.featured_wallets);
         const walletAddress = data.featured_wallets;
         if (!Array.isArray(data.featured_wallets))
           throw new Error("Data response not fit");

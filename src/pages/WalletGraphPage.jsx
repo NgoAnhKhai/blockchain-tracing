@@ -59,7 +59,6 @@ export default function WalletGraphPage() {
     }
   };
 
-  // Đếm node
   const totalNodeCount = useMemo(() => {
     if (!graphData) return 0;
     const sent = graphData.sent ?? [];
@@ -73,7 +72,6 @@ export default function WalletGraphPage() {
   const show3D =
     graphData && typeof totalNodeCount === "number" && totalNodeCount <= 100;
 
-  // Xử lý copy ví + hiệu ứng copied
   const handleCopy = () => {
     if (address) {
       navigator.clipboard.writeText(address);
@@ -214,9 +212,7 @@ export default function WalletGraphPage() {
                 color: "#bbb",
               }}
             >
-              {!address
-                ? "Nhập địa chỉ ví để xem mạng lưới giao dịch"
-                : "Không có dữ liệu"}
+              {!address ? "Select wallet address" : "Do not have data"}
             </Box>
           )
         )}

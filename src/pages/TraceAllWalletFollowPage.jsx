@@ -38,7 +38,7 @@ export default function TraceAllWalletFollowPage() {
         }));
         setWallets(featured.sort((a, b) => b._balanceNum - a._balanceNum));
       } catch (error) {
-        console.error("Failed to fetch wallets:", error);
+        throw error;
       } finally {
         setLoading(false);
       }
@@ -59,7 +59,7 @@ export default function TraceAllWalletFollowPage() {
         )
       );
     } catch (err) {
-      console.error("Follow/unfollow failed", err);
+      throw error;
     }
   };
 

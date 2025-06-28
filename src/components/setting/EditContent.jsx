@@ -39,13 +39,12 @@ export default function EditContent({ user }) {
       setSaving(false);
       alert("Profile updated successfully!");
     } catch (error) {
-      console.error("Error updating profile:", error);
+      throw error;
       setSaving(false);
       alert("Failed to update profile. Please try again.");
     }
   };
 
-  // Các màu cho theme light/dark
   const cardBg = isDark ? "#231d34" : "#fff";
   const cardBorder = isDark ? "#2d283c" : "#ece8fb";
   const boxShadow = isDark ? "0 8px 40px #a076ff18" : "0 8px 32px #dfcdfd35";

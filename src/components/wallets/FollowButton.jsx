@@ -2,8 +2,6 @@ import React from "react";
 import IconButton from "@mui/material/IconButton";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import { SubscribeWallet } from "../../services/follow/SubscribeWallet";
-import { UnsubscribeWallet } from "../../services/follow/UnsubscribeWallet";
 
 export default function FollowButton({
   isFollowed,
@@ -16,7 +14,7 @@ export default function FollowButton({
     try {
       onStatusChange(walletId, walletAddress, isFollowed);
     } catch (err) {
-      console.error("Follow/unfollow failed", err);
+      throw err;
     }
   };
 

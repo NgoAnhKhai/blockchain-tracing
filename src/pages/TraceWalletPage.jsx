@@ -74,7 +74,6 @@ const TraceWalletPage = () => {
         setDetail(res);
 
         const alertsRes = await GetAlertsDetailUser(id, 1, 5);
-        console.log("alerts", alertsRes.alerts);
 
         const alertArr = alertsRes.alerts;
         setAlerts(alertArr);
@@ -652,7 +651,11 @@ const TraceWalletPage = () => {
           <Card
             sx={{ flex: 1, backgroundColor: theme.palette.background.paper }}
           >
-            <RelatedAlertsTable walletId={id} navigate={navigate} />
+            <RelatedAlertsTable
+              walletId={id}
+              navigate={navigate}
+              forceFollow={detail?.is_following}
+            />
           </Card>
         </Box>
       </Box>

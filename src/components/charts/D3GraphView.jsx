@@ -31,7 +31,7 @@ export default function D3GraphView({ data, onNodeClick }) {
     });
     return set;
   }, [d3Data]);
-  console.log("[D3GraphView] Tổng số node:", nodeSet.size);
+
   return (
     <Box sx={{ flex: 1 }}>
       <WalletGraph
