@@ -3,7 +3,6 @@ import ReactECharts from "echarts-for-react";
 import { useTheme } from "@mui/material";
 import dayjs from "dayjs";
 
-// Hàm gom transactions theo tháng
 function groupTxByMonth(transactions, walletAddress) {
   const grouped = {};
   walletAddress = walletAddress?.toLowerCase?.() || "";
@@ -19,7 +18,6 @@ function groupTxByMonth(transactions, walletAddress) {
     if (isOut) grouped[month].outgoing += value;
   });
 
-  // Đảm bảo đủ 12 tháng gần nhất (sort tăng dần)
   const months = [];
   for (let i = 11; i >= 0; --i) {
     months.push(dayjs().subtract(i, "month").format("YYYY-MM"));

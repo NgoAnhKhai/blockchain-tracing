@@ -29,7 +29,7 @@ export default function WalletGraph({
   const ref = useRef();
 
   const [sentColor, receivedColor] = useMemo(generate2DistinctPastel, [center]);
-  // Popup state
+
   const [hoveredNode, setHoveredNode] = useState(null);
 
   useEffect(() => {
@@ -226,7 +226,6 @@ export default function WalletGraph({
     receivedColor,
   ]);
 
-  // Legend
   return (
     <div style={{ width: "100%", height: "80vh", position: "relative" }}>
       <svg ref={ref} style={{ width: "100%", height: "100%" }} />

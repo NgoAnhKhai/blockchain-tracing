@@ -5,7 +5,6 @@ import { useTheme } from "@mui/material";
 const WeeklyAreaChart = () => {
   const theme = useTheme();
 
-  // Dữ liệu mẫu cho 7 ngày (Mon→Sun)
   const dates = useMemo(
     () => ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     []

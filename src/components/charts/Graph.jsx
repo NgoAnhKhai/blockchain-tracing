@@ -5,7 +5,7 @@ import ParticleEdge from "./ParticleEdge";
 
 export default function Graph({
   center,
-  children, // [{address, type}]
+  children,
   onNodeClick,
   centerColor = "#29fff6",
   sentColor,
@@ -15,7 +15,6 @@ export default function Graph({
   const [isPaused, setIsPaused] = useState(false);
   const rotRef = useRef(0);
 
-  // Vị trí đều trên mặt cầu
   const positions = useMemo(() => {
     const pts = [];
     const n = children.length;

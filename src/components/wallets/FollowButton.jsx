@@ -14,7 +14,6 @@ export default function FollowButton({
   const handleToggle = async (e) => {
     e.stopPropagation();
     try {
-      // Gọi API, xử lý như cũ (có thể bỏ API ở đây, chỉ cần ở Page, hoặc giữ cũng được)
       onStatusChange(walletId, walletAddress, isFollowed);
     } catch (err) {
       console.error("Follow/unfollow failed", err);

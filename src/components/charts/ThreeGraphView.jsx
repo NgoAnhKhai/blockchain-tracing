@@ -5,7 +5,6 @@ import { OrbitControls, Environment } from "@react-three/drei";
 import Graph from "./Graph";
 import { Box } from "@mui/material";
 
-// Utility màu pastel
 function randomPastelColor() {
   const hue = Math.floor(Math.random() * 360);
   return `hsl(${hue}, 72%, 74%)`;
@@ -22,7 +21,7 @@ function gen2Colors() {
 
 export default function ThreeGraphView({ data, onNodeClick }) {
   const center = data?.address || "";
-  // children kèm type sent/received
+
   const children = useMemo(() => {
     if (!data) return [];
     const arr = [];
@@ -50,7 +49,6 @@ export default function ThreeGraphView({ data, onNodeClick }) {
     return arr;
   }, [data, center]);
 
-  // Random màu sent/received mỗi lần mount
   const [sentColor, receivedColor] = useMemo(gen2Colors, [center]);
 
   const handleNodeSelect = (addr) => {

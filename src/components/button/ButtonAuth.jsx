@@ -1,7 +1,7 @@
 import { Button } from "@mui/material";
 import { styled, keyframes } from "@mui/system";
 import { transform } from "lodash";
-// 1) Keyframes để di chuyển gradient từ trái sang phải
+
 const gradientShift = keyframes`
   0% {
     background-position: 0% 50%;

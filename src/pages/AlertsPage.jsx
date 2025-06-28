@@ -47,7 +47,6 @@ const AlertsPage = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Auto fill filterWallet từ param "address"
   useEffect(() => {
     const paramAddress = searchParams.get("address");
     if (paramAddress && paramAddress !== filterWallet) {

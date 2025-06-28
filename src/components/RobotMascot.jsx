@@ -11,7 +11,7 @@ function RobotModel() {
   useEffect(() => {
     if (animations && animations.length) {
       mixer.current = new THREE.AnimationMixer(scene);
-      // Tự động play animation đầu tiên
+
       const action = mixer.current.clipAction(animations[0]);
       action.play();
     }

@@ -30,7 +30,6 @@ export default function MainHeader() {
   const { viewMode, setViewMode } = useViewMode();
   const { user, signout } = useAuth();
 
-  // Đổi SearchBar theo route
   const isWalletGraph = pathname === "/wallet-graph";
   const showSearching = pathname !== "/alerts";
   const showToggle = pathname === "/wallet-graph";

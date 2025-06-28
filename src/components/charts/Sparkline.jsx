@@ -3,12 +3,11 @@ import ReactECharts from "echarts-for-react";
 import * as echarts from "echarts";
 
 const Sparkline = ({ data, color = "#ff4d88" }) => {
-  // gradient từ đậm → nhạt
   const areaColor = useMemo(
     () =>
       new echarts.graphic.LinearGradient(0, 0, 0, 1, [
         { offset: 0, color },
-        { offset: 1, color: `${color}22` }, // mờ dần
+        { offset: 1, color: `${color}22` },
       ]),
     [color]
   );
@@ -26,8 +25,8 @@ const Sparkline = ({ data, color = "#ff4d88" }) => {
         {
           type: "line",
           data,
-          smooth: true, // bo tròn sóng
-          showSymbol: false, // ẩn điểm
+          smooth: true,
+          showSymbol: false,
           lineStyle: { width: 1, color },
           areaStyle: { color: areaColor },
         },

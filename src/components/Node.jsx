@@ -23,7 +23,6 @@ export default function Node({
     onHover(false);
   };
 
-  // Làm màu hover sáng lên một chút
   function lighten(color) {
     try {
       let col = color.replace("hsl(", "").replace(")", "").split(",");

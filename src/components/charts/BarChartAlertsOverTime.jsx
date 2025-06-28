@@ -21,7 +21,6 @@ function groupAlertsByMonth(alerts) {
 const BarChartAlertsOverTime = ({ alerts = [] }) => {
   const theme = useTheme();
 
-  // Xử lý dữ liệu động
   const data = useMemo(() => groupAlertsByMonth(alerts), [alerts]);
 
   const option = useMemo(

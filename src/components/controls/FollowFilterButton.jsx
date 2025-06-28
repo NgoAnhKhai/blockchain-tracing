@@ -7,7 +7,6 @@ const filterOptions = ["all", "followed"];
 const FollowFilterSwitcher = ({ filter, setFilter }) => {
   const theme = useTheme();
 
-  // Màu accent dùng được cho cả 2 mode
   const GRADIENT = "linear-gradient(90deg, #bb86fc 0%, #ff4d88 100%)";
   const inactiveText = theme.palette.mode === "dark" ? "#bb86fc" : "#a024a8";
   const inactiveBg =
@@ -47,7 +46,7 @@ const FollowFilterSwitcher = ({ filter, setFilter }) => {
               minHeight: "32px",
               py: "6px",
               px: "12px",
-              // Giúp chữ luôn nổi trên nền sáng
+
               transition: "color 0.18s",
             }}
           >

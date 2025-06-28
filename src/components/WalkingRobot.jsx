@@ -13,13 +13,11 @@ function WalkingRobotModel({ containerWidth }) {
   const group = useRef();
   const { scene, animations } = useGLTF("/walking.glb");
   const mixer = useRef();
-  // Đổi phạm vi posX cho rộng hơn theo width container
   const [limit, setLimit] = useState({ left: -2, right: 2 });
 
   useEffect(() => {
     if (containerWidth) {
-      // Quy đổi px ra đơn vị trong 3D (cứ 320px ~ 4 đơn vị, bạn scale theo width thực tế)
-      const units = (containerWidth / 320) * 4; // scale cho 320px = 4 units
+      const units = (containerWidth / 320) * 4;
       setLimit({ left: -units / 2 + 0.9, right: units / 2 - 0.9 });
     }
   }, [containerWidth]);
@@ -35,12 +33,11 @@ function WalkingRobotModel({ containerWidth }) {
     }
   }, [animations, scene]);
 
-  // Bắt đầu từ bên trái
   const posX = useRef(limit.left);
 
   useFrame((state, delta) => {
     if (mixer.current) mixer.current.update(delta);
-    posX.current += delta * 2; // tốc độ, tăng số này cho nhanh
+    posX.current += delta * 2;
     if (posX.current > limit.right) posX.current = limit.left;
     if (group.current) group.current.position.x = posX.current;
   });
