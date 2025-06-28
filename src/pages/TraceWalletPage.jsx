@@ -14,11 +14,19 @@ import {
   TableBody,
   IconButton,
   Tooltip,
+  Chip,
 } from "@mui/material";
 import ChartMoneyFlow from "../components/charts/ChartMoneyFlow";
 import { useParams, useNavigate } from "react-router-dom";
 import { GetDetailWallet } from "../services/wallets/GetDetailWallet";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { SubscribeWallet } from "../services/follow/SubscribeWallet";
+import { UnsubscribeWallet } from "../services/follow/UnsubscribeWallet";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import LoadingButton from "@mui/lab/LoadingButton";
+import { GetAlertsDetailUser } from "../services/AIModel/GetAlertsDetailUser";
+import RelatedAlertsTable from "../components/RelatedAlertsTable";
 
 function formatNumberShort(n) {
   if (!n || isNaN(Number(n))) return n;
@@ -29,7 +37,6 @@ function formatNumberShort(n) {
   return n.toLocaleString();
 }
 
-// Ngày giờ gọn
 function formatDateTime(dt) {
   if (!dt) return "--";
   const d = new Date(dt);
@@ -55,29 +62,58 @@ const TraceWalletPage = () => {
   const navigate = useNavigate();
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const [followLoading, setFollowLoading] = useState(false);
+  const [alerts, setAlerts] = useState([]);
+  const [alertsLoading, setAlertsLoading] = useState(false);
   useEffect(() => {
-    async function fetchDetail() {
+    async function fetchDetailAndAlerts() {
       setLoading(true);
+      setAlertsLoading(true);
       try {
         const res = await GetDetailWallet(id);
         setDetail(res);
+
+        const alertsRes = await GetAlertsDetailUser(id, 1, 5);
+        console.log("alerts", alertsRes.alerts);
+
+        const alertArr = alertsRes.alerts;
+        setAlerts(alertArr);
       } catch (e) {
-        console.error("Error fetching wallet detail:", e);
+        console.error("Error fetching wallet detail/alerts:", e);
         setDetail(null);
+        setAlerts([]);
       }
       setLoading(false);
+      setAlertsLoading(false);
     }
-    if (id) fetchDetail();
+    if (id) fetchDetailAndAlerts();
   }, [id]);
 
   function shortenBigNumber(n) {
     if (!n) return "--";
     const s = n.toString();
-    if (s.includes("B")) return s; // đã là 1.23B, ...
+    if (s.includes("B")) return s;
     if (s.length > 6) return `${s[0]}...${s.slice(-2)}B`;
     return n;
   }
+
+  const handleToggleFollow = async () => {
+    if (!detail) return;
+    setFollowLoading(true);
+    try {
+      if (detail.is_following) {
+        await UnsubscribeWallet(detail.address || id);
+      } else {
+        await SubscribeWallet(detail.address || id);
+      }
+      setDetail((prev) =>
+        prev ? { ...prev, is_following: !prev.is_following } : prev
+      );
+    } catch (e) {
+      console.error("Follow/unfollow error:", e);
+    }
+    setFollowLoading(false);
+  };
 
   const transactions = detail?.transactions?.slice?.(0, 8) ?? [];
   const hasMore = (detail?.transactions?.length ?? 0) > 8;
@@ -88,7 +124,7 @@ const TraceWalletPage = () => {
         p: 2,
         bgcolor: theme.palette.background.default,
         color: theme.palette.text.primary,
-        minHeight: "100vh",
+        minHeight: "100%",
       }}
     >
       <Box
@@ -100,7 +136,7 @@ const TraceWalletPage = () => {
           gap: 2,
         }}
       >
-        {/* WALLET ADDRESS - ON TOP */}
+        {/* WALLET ADDRESS + NÚT FOLLOW */}
         <Box
           sx={{ mb: 1, mt: 1, display: "flex", alignItems: "center", gap: 2 }}
         >
@@ -134,6 +170,40 @@ const TraceWalletPage = () => {
           >
             {id}
           </Typography>
+          {/* Nút follow/unfollow */}
+          {detail && (
+            <LoadingButton
+              variant={detail.is_following ? "contained" : "outlined"}
+              color="primary"
+              size="small"
+              loading={followLoading}
+              startIcon={
+                detail.is_following ? <FavoriteIcon /> : <FavoriteBorderIcon />
+              }
+              onClick={handleToggleFollow}
+              sx={{
+                ml: 2,
+                minWidth: 105,
+                fontWeight: 700,
+                fontFamily: "monospace",
+                textTransform: "none",
+                boxShadow: detail.is_following
+                  ? "0 2px 12px 0 #1be7ff77"
+                  : "0 2px 12px 0 #37b6fd44",
+                letterSpacing: 0.6,
+                bgcolor: detail.is_following ? "#22bbff" : "transparent",
+                color: detail.is_following ? "#fff" : "#22bbff",
+                borderColor: "#22bbff",
+                "&:hover": {
+                  bgcolor: detail.is_following ? "#1e98d7" : "#e3f7ff",
+                },
+                transition: "all .2s",
+              }}
+              disabled={followLoading}
+            >
+              {detail.is_following ? "Following" : "Follow"}
+            </LoadingButton>
+          )}
         </Box>
 
         {/* OVERVIEW + CHART */}
@@ -262,7 +332,6 @@ const TraceWalletPage = () => {
                         overflow: "hidden",
                       }}
                     >
-                      {/* Glow hiệu ứng bóng ở góc */}
                       <Box
                         sx={{
                           position: "absolute",
@@ -305,7 +374,7 @@ const TraceWalletPage = () => {
                         ) ?? "--"}
                       </Typography>
                     </Box>
-                    {/* Total Out - tím xanh (glow) */}
+                    {/* Total Out */}
                     <Box
                       sx={{
                         flex: 1,
@@ -455,7 +524,7 @@ const TraceWalletPage = () => {
             </CardContent>
           </Card>
 
-          {/* CHART TO HƠN */}
+          {/* CHART */}
           <Card
             sx={{
               flex: "2.2 1 0",
@@ -583,16 +652,7 @@ const TraceWalletPage = () => {
           <Card
             sx={{ flex: 1, backgroundColor: theme.palette.background.paper }}
           >
-            <CardContent>
-              <Typography variant="h6">Related Alerts</Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ textAlign: "center", my: 5 }}
-              >
-                Coming soon...
-              </Typography>
-            </CardContent>
+            <RelatedAlertsTable walletId={id} navigate={navigate} />
           </Card>
         </Box>
       </Box>

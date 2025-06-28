@@ -15,6 +15,7 @@ import { SubscribeWallet } from "../services/follow/SubscribeWallet";
 import { UnsubscribeWallet } from "../services/follow/UnsubscribeWallet";
 import { useNavigate } from "react-router-dom";
 import Loader from "../components/loading/Loading";
+
 export default function TraceAllWalletFollowPage() {
   const theme = useTheme();
   const [wallets, setWallets] = useState([]);
@@ -94,6 +95,11 @@ export default function TraceAllWalletFollowPage() {
         <Loader />
       </Box>
     );
+
+  // Accent màu hồng tím từ theme
+  const accent = theme.palette.primary.main;
+  const accentLight = theme.palette.primary.light;
+
   return (
     <Box
       sx={{
@@ -106,14 +112,25 @@ export default function TraceAllWalletFollowPage() {
         <FollowFilterSwitcher filter={filter} setFilter={setFilter} />
       </Box>
 
-      <Divider sx={{ mb: 2 }} />
-      <Card sx={{ backgroundColor: "rgba(40, 16, 60, 0.18)", borderRadius: 3 }}>
+      <Divider sx={{ mb: 2, borderColor: accent + "33" }} />
+
+      <Card
+        sx={{
+          background: theme.palette.background.paper,
+          borderRadius: 3,
+          boxShadow: theme.shadows[6],
+          border: `1.5px solid ${accentLight}50`,
+        }}
+      >
         <CardContent>
           <WalletTable
             wallets={paginatedWallets}
             onToggleFollow={handleFollowToggle}
             onRowClick={handleRowClick}
             formatAddress={formatAddress}
+            // Gợi ý: thêm prop accent để WalletTable dùng theme đúng luôn
+            accent={accent}
+            accentLight={accentLight}
           />
           <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
             <Pagination
@@ -125,6 +142,17 @@ export default function TraceAllWalletFollowPage() {
               boundaryCount={1}
               showFirstButton
               showLastButton
+              sx={{
+                "& .MuiPaginationItem-root": {
+                  fontWeight: 700,
+                  color: accent,
+                  borderColor: accentLight,
+                  "&.Mui-selected": {
+                    bgcolor: accent,
+                    color: "#fff",
+                  },
+                },
+              }}
             />
           </Box>
         </CardContent>

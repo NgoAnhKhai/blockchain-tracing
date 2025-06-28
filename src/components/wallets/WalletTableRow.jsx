@@ -5,6 +5,7 @@ import WalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import Box from "@mui/material/Box";
 import FollowButton from "./FollowButton";
 import RankCup from "../common/RankCup";
+import { useTheme } from "@mui/material";
 
 export default function WalletTableRow({
   row,
@@ -13,6 +14,11 @@ export default function WalletTableRow({
   onRowClick,
   formatAddress,
 }) {
+  const theme = useTheme();
+  const accent = theme.palette.primary.main;
+  const accentLight = theme.palette.primary.light;
+  const accentDark = theme.palette.primary.dark;
+
   function formatBalance(balance) {
     const num = Number(balance);
     if (isNaN(num)) return balance;
@@ -31,16 +37,26 @@ export default function WalletTableRow({
         cursor: "pointer",
         transition: "all 0.13s",
         "&:hover": {
-          background: "linear-gradient(90deg, #40156b 0%, #0a0023 100%)",
-          boxShadow: "0 2px 16px 0 #bb86fc50",
-          transform: "scale(1.018)",
+          background:
+            theme.palette.mode === "dark"
+              ? "linear-gradient(90deg, #2e1945 0%, #19062e 100%)"
+              : "linear-gradient(90deg, #fff1fa 0%, #f3a2f3 100%)",
+          boxShadow: `0 2px 16px 0 ${accent}44`,
+          transform: "scale(1.014)",
         },
       }}
     >
-      <TableCell sx={{ fontWeight: "bold", fontSize: 15 }}>
+      <TableCell
+        sx={{
+          fontWeight: 900,
+          fontSize: 15,
+          fontFamily: "Inter, monospace",
+          color: accent,
+        }}
+      >
         <WalletIcon
           sx={{
-            color: "#bb86fc",
+            color: accentLight,
             fontSize: 20,
             mr: 1,
             verticalAlign: "middle",
@@ -48,10 +64,25 @@ export default function WalletTableRow({
         />
         {formatAddress(row.address)}
       </TableCell>
-      <TableCell sx={{ fontWeight: 700, color: "#fff" }}>
+      <TableCell
+        sx={{
+          fontWeight: 700,
+          color: theme.palette.text.primary,
+          fontFamily: "Inter, monospace",
+        }}
+      >
         {row.name_tag || "--"}
       </TableCell>
-      <TableCell sx={{ color: "#ff4d88", fontWeight: 700, fontSize: 16 }}>
+      <TableCell
+        sx={{
+          color: accent,
+          fontWeight: 900,
+          fontFamily: "Inter, monospace",
+          fontSize: 20,
+          letterSpacing: 0.5,
+          textShadow: `0 2px 10px ${accentLight}22`,
+        }}
+      >
         {formatBalance(row.balance)}
       </TableCell>
 

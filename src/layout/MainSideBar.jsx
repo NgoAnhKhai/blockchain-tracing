@@ -44,8 +44,8 @@ const MainSideBar = () => {
   return (
     <Box
       sx={{
-        width: 220,
-        bgcolor: theme.palette.background.paper,
+        width: "100%",
+        bgcolor: theme.palette.background.default,
         color: theme.palette.text.secondary,
         height: "100vh",
         display: "flex",

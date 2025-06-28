@@ -20,8 +20,8 @@ const Router = () => {
         <Route path="/trace-wallets/detail" element={<TraceWalletPage />} />
         <Route path="/wallet-graph" element={<WalletGraphPage />} />
         <Route path="/transactions" element={<TransactionsPage />} />
-        <Route path="/Alerts" element={<AlertsPage />} />
         <Route path="/test" element={<TestRobot />} />
+        <Route path="/Alerts" element={<AlertsPage />} />
       </Route>
     </Routes>
   );

@@ -27,24 +27,63 @@ const ThemeProvider = ({ children }) => {
       createTheme({
         palette: {
           mode: isDark ? "dark" : "light",
+          primary: {
+            main: "#ff61d5",
+            light: "#ffb8f5",
+            dark: "#a042b3",
+            contrastText: "#fff",
+          },
+          secondary: {
+            main: "#8d6cff",
+            light: "#d1bbff",
+            dark: "#5b3a99",
+            contrastText: "#fff",
+          },
           background: {
-            // <-- đổi thành màu #1F232C như mockup
             default: isDark ? "#0F111A" : "#f5f5f5",
-            paper: isDark ? "#0F111A" : "#ffffff",
+            paper: isDark ? "#191528" : "#fff",
           },
-          // (tuỳ chọn) bạn có thể điều chỉnh text.primary để sáng hơn trên nền này
           text: {
-            primary: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.87)",
+            primary: isDark ? "rgba(255,255,255,0.9)" : "#2d183d",
+            secondary: isDark ? "#f1c5f9" : "#a042b3",
           },
+          error: { main: "#ff4e8b" },
+          warning: { main: "#ffbc65" },
+          success: { main: "#37d67a" },
+          action: {
+            hover: isDark ? "#37204e" : "#ffecfa",
+            selected: isDark ? "#2e1941" : "#ffe2fc",
+          },
+          divider: isDark ? "#ffb8f533" : "#a042b322",
+        },
+        shape: {
+          borderRadius: 12,
         },
         components: {
           MuiCssBaseline: {
             styleOverrides: {
               body: {
-                transition: "background-color 0.4s ease, color 0.4s ease",
+                transition: "background-color 0.4s, color 0.4s",
+                backgroundColor: isDark ? "#0F111A" : "#f5f5f5",
+                color: isDark ? "#fff" : "#2d183d",
+              },
+              "*": {
+                transition: "background-color 0.4s, color 0.4s",
+              },
+              a: {
+                color: "#ff61d5",
               },
             },
           },
+        },
+        typography: {
+          fontFamily: [
+            "Inter",
+            "Roboto",
+            "Arial",
+            "monospace",
+            "sans-serif",
+          ].join(","),
         },
       }),
     [isDark]
@@ -57,7 +96,10 @@ const ThemeProvider = ({ children }) => {
         <GlobalStyles
           styles={{
             "*": {
-              transition: "background-color 0.4s ease, color 0.4s ease",
+              transition: "background-color 0.4s, color 0.4s",
+            },
+            a: {
+              color: "#ff61d5",
             },
           }}
         />

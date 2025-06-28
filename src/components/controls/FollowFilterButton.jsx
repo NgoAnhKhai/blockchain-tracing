@@ -1,16 +1,26 @@
 import React from "react";
-import { Box, Button } from "@mui/material";
+import { Box, Button, useTheme } from "@mui/material";
 import { motion } from "framer-motion";
 
 const filterOptions = ["all", "followed"];
 
 const FollowFilterSwitcher = ({ filter, setFilter }) => {
+  const theme = useTheme();
+
+  // Màu accent dùng được cho cả 2 mode
+  const GRADIENT = "linear-gradient(90deg, #bb86fc 0%, #ff4d88 100%)";
+  const inactiveText = theme.palette.mode === "dark" ? "#bb86fc" : "#a024a8";
+  const inactiveBg =
+    theme.palette.mode === "dark"
+      ? "rgba(190,170,255,0.14)"
+      : "rgba(190,170,255,0.13)";
+
   return (
     <Box
       sx={{
         display: "inline-flex",
         borderRadius: "999px",
-        bgcolor: "rgba(255, 255, 255, 0.08)",
+        bgcolor: inactiveBg,
         p: "3px",
         position: "relative",
         width: 300,
@@ -19,7 +29,7 @@ const FollowFilterSwitcher = ({ filter, setFilter }) => {
         alignItems: "center",
       }}
     >
-      {filterOptions.map((option) => {
+      {filterOptions.map((option, idx) => {
         const isActive = filter === option;
         return (
           <Button
@@ -29,14 +39,16 @@ const FollowFilterSwitcher = ({ filter, setFilter }) => {
             sx={{
               zIndex: 1,
               flex: 1,
-              color: isActive ? "#fff" : "rgba(255,255,255,0.6)",
-              fontWeight: 600,
-              fontSize: 14,
+              color: isActive ? "#fff" : inactiveText,
+              fontWeight: 700,
+              fontSize: 15,
               borderRadius: "999px",
               textTransform: "none",
               minHeight: "32px",
               py: "6px",
               px: "12px",
+              // Giúp chữ luôn nổi trên nền sáng
+              transition: "color 0.18s",
             }}
           >
             {option === "all" ? "Featured Wallets" : "Followed Only"}
@@ -54,8 +66,9 @@ const FollowFilterSwitcher = ({ filter, setFilter }) => {
           left: filter === "all" ? 3 : "calc(50% + 3px)",
           width: "calc(50% - 6px)",
           borderRadius: "999px",
-          background: "linear-gradient(90deg, #bb86fc, #ff4d88)",
+          background: GRADIENT,
           zIndex: 0,
+          boxShadow: "0 2px 14px #e548c814",
         }}
       />
     </Box>

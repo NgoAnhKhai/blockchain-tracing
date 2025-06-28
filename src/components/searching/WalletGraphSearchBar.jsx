@@ -7,20 +7,25 @@ import {
   IconButton,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { useNavigate } from "react-router-dom";
+import { useAddressSearch } from "../../context/AddressSearchContext";
+import { useLocation, useNavigate } from "react-router-dom";
 
-const SearchingBar = () => {
+const WalletGraphSearchBar = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const inputRef = useRef(null);
+  const { setAddress } = useAddressSearch();
   const navigate = useNavigate();
-
+  const location = useLocation();
   const [inputValue, setInputValue] = useState("");
 
   const doSearch = () => {
     const value = inputValue.trim();
     if (!value) return;
-    navigate(`/trace-wallets/${value}`);
+    setAddress(value);
+    if (location.pathname !== "/wallet-graph") {
+      navigate("/wallet-graph");
+    }
     setInputValue("");
   };
 
@@ -46,7 +51,7 @@ const SearchingBar = () => {
         display: "flex",
         alignItems: "center",
         bgcolor: isDark
-          ? "linear-gradient(90deg, #232139 70%, #3d2766 100%)"
+          ? "linear-gradient(90deg, #251847 70%, #391773 100%)"
           : "#fff",
         borderRadius: "14px",
         width: "100%",
@@ -54,14 +59,14 @@ const SearchingBar = () => {
         minHeight: 50,
         px: 2,
         gap: 1,
-        border: isDark ? "2px solid #a076ff" : "1.5px solid #bbb",
+        border: isDark ? "2px solid #b486ff" : "1.5px solid #bbb",
         boxShadow: isDark
-          ? "0 4px 24px 0 rgba(160,118,255,0.09)"
+          ? "0 4px 24px 0 rgba(160,118,255,0.10)"
           : "0 1px 2px #eee",
         transition: "background-color 0.3s, border-color 0.2s",
         "&:focus-within": {
-          borderColor: "#d19eff",
-          boxShadow: "0 0 0 2px #a076ff55",
+          borderColor: "#bb80ff",
+          boxShadow: "0 0 0 2px #b486ff55",
         },
       }}
     >
@@ -69,10 +74,10 @@ const SearchingBar = () => {
         onClick={doSearch}
         sx={{
           p: 0.7,
-          color: "#a076ff",
+          color: "#b486ff",
           bgcolor: "transparent",
           transition: "color .18s",
-          "&:hover": { color: "#fff", bgcolor: "#a076ff" },
+          "&:hover": { color: "#fff", bgcolor: "#b486ff" },
         }}
       >
         <SearchIcon sx={{ fontSize: 26 }} />
@@ -82,7 +87,7 @@ const SearchingBar = () => {
         value={inputValue}
         onChange={handleInputChange}
         onKeyDown={handleInputKeyDown}
-        placeholder="Search wallet address…"
+        placeholder="Search wallet address"
         sx={{
           color: "#fff",
           flex: 1,
@@ -98,9 +103,9 @@ const SearchingBar = () => {
       />
       <Typography
         sx={{
-          color: "#a076ff",
+          color: "#b486ff",
           fontSize: 13,
-          background: "#261c40",
+          background: "#281c48",
           px: 1.5,
           py: "3px",
           borderRadius: "7px",
@@ -115,4 +120,4 @@ const SearchingBar = () => {
   );
 };
 
-export default SearchingBar;
+export default WalletGraphSearchBar;

@@ -7,16 +7,22 @@ import {
   TextField,
   Avatar,
   InputAdornment,
+  useTheme,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import EmailIcon from "@mui/icons-material/Email";
 import PersonIcon from "@mui/icons-material/Person";
-import LinkIcon from "@mui/icons-material/Link";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import DiscordIcon from "../../assets/discord.png";
 import { updateProfile } from "../../services/UpdateProfile";
 
 export default function EditContent({ user }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
+  const accent = theme.palette.primary.main;
+  const accentLight = theme.palette.primary.light;
+  const accentDark = theme.palette.primary.dark;
+
   const [username, setUsername] = useState(user?.username || "");
   const [email, setEmail] = useState(user?.email || "");
   const [webhook, setWebhook] = useState(user?.webhook_url || "");
@@ -39,6 +45,17 @@ export default function EditContent({ user }) {
     }
   };
 
+  // Các màu cho theme light/dark
+  const cardBg = isDark ? "#231d34" : "#fff";
+  const cardBorder = isDark ? "#2d283c" : "#ece8fb";
+  const boxShadow = isDark ? "0 8px 40px #a076ff18" : "0 8px 32px #dfcdfd35";
+  const inputBg = isDark ? "#221d31" : "#f6f1ff";
+  const inputColor = isDark ? "#fff" : "#543a6a";
+  const inputLabelColor = isDark ? "#a076ff" : accent;
+  const inputBorder = isDark ? "#32284b" : "#e0cafd";
+  const avatarBorder = isDark ? "#a076ff" : accentLight;
+  const helperText = isDark ? "#bbb" : "#9e63c2";
+
   return (
     <div style={{ padding: 32 }}>
       <Box
@@ -57,15 +74,20 @@ export default function EditContent({ user }) {
           sx={{
             width: 72,
             height: 72,
-            border: "2px solid #a076ff",
-            boxShadow: "0 2px 10px #a076ff44",
+            border: `2px solid ${avatarBorder}`,
+            boxShadow: isDark ? "0 2px 10px #a076ff44" : "0 2px 10px #ebc9fd77",
+            bgcolor: "#fff",
           }}
         />
         <Box>
-          <Typography variant="h5" fontWeight={700} sx={{ color: "#fff" }}>
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            sx={{ color: isDark ? "#fff" : accentDark }}
+          >
             Edit Profile
           </Typography>
-          <Typography sx={{ color: "#bb86fc", fontSize: 15, mt: 0.5 }}>
+          <Typography sx={{ color: inputLabelColor, fontSize: 15, mt: 0.5 }}>
             Update your information and Discord notifications!
           </Typography>
         </Box>
@@ -78,14 +100,16 @@ export default function EditContent({ user }) {
         <Card
           sx={{
             p: 3,
-            bgcolor: "#231d34",
+            bgcolor: cardBg,
             borderRadius: 5,
-            boxShadow: "0 8px 40px #a076ff18",
-            border: "1.5px solid #2d283c",
+            boxShadow: boxShadow,
+            border: `1.5px solid ${cardBorder}`,
             mb: 2,
+            transition: "all .25s",
           }}
         >
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {/* Username */}
             <TextField
               label="Username"
               value={username}
@@ -94,19 +118,27 @@ export default function EditContent({ user }) {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <PersonIcon sx={{ color: "#bb86fc" }} />
+                    <PersonIcon sx={{ color: inputLabelColor }} />
                   </InputAdornment>
                 ),
-                style: { color: "#fff" },
+                style: { color: inputColor },
+              }}
+              InputLabelProps={{
+                style: { color: inputLabelColor },
               }}
               sx={{
-                bgcolor: "#221d31",
+                bgcolor: inputBg,
                 borderRadius: 2,
-                input: { color: "#fff" },
+                input: { color: inputColor, fontWeight: 500 },
+                label: { color: inputLabelColor },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: inputBorder,
+                },
               }}
               fullWidth
               autoComplete="off"
             />
+            {/* Email */}
             <TextField
               label="Email"
               value={email}
@@ -118,12 +150,19 @@ export default function EditContent({ user }) {
                     <EmailIcon sx={{ color: "#fd4d85" }} />
                   </InputAdornment>
                 ),
-                style: { color: "#fff" },
+                style: { color: inputColor },
+              }}
+              InputLabelProps={{
+                style: { color: inputLabelColor },
               }}
               sx={{
-                bgcolor: "#221d31",
+                bgcolor: inputBg,
                 borderRadius: 2,
-                input: { color: "#fff" },
+                input: { color: inputColor, fontWeight: 500 },
+                label: { color: inputLabelColor },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: inputBorder,
+                },
               }}
               fullWidth
               autoComplete="off"
@@ -145,34 +184,45 @@ export default function EditContent({ user }) {
                     />
                   </InputAdornment>
                 ),
-                style: { color: "#fff" },
+                style: { color: inputColor },
+              }}
+              InputLabelProps={{
+                style: { color: inputLabelColor },
               }}
               sx={{
-                bgcolor: "#221d31",
+                bgcolor: inputBg,
                 borderRadius: 2,
-                input: { color: "#fff" },
+                input: { color: inputColor, fontWeight: 500 },
+                label: { color: inputLabelColor },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: inputBorder,
+                },
               }}
               placeholder="https://discord.com/api/webhooks/..."
               fullWidth
               autoComplete="off"
             />
+            {/* Button */}
             <Button
               variant="contained"
               onClick={handleSaveProfile}
               sx={{
                 mt: 2,
                 borderRadius: 2,
-                background: "linear-gradient(90deg, #7289da 0%, #ff4d88 100%)",
+                background: `linear-gradient(90deg, ${accentLight} 0%, #ff4d88 100%)`,
                 color: "#fff",
                 fontWeight: 700,
                 fontSize: 16,
                 px: 4,
                 py: 1.5,
                 letterSpacing: 1,
-                boxShadow: "0 2px 24px #a076ff22",
+                boxShadow: isDark
+                  ? "0 2px 24px #a076ff22"
+                  : "0 2px 24px #ebc9fd77",
                 ":hover": {
-                  background: "linear-gradient(90deg, #ff4d88, #7289da 90%)",
+                  background: `linear-gradient(90deg, #ff4d88, ${accentLight} 90%)`,
                 },
+                transition: "all .18s",
               }}
               fullWidth
               startIcon={<VerifiedUserIcon />}
@@ -184,7 +234,13 @@ export default function EditContent({ user }) {
         </Card>
       </motion.div>
       <Typography
-        sx={{ mt: 2, color: "#bbb", fontSize: 14, textAlign: "center" }}
+        sx={{
+          mt: 2,
+          color: helperText,
+          fontSize: 14,
+          textAlign: "center",
+          transition: "color .2s",
+        }}
       >
         All changes will be securely updated to your account.
       </Typography>

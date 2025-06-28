@@ -1,19 +1,31 @@
-
 import React, { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 import { useTheme } from "@mui/material";
 
-// Dữ liệu mẫu: Alerts count theo tháng (1→12)
-const sampleAlertsOverTime = {
-  months: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
-  counts: [5, 8, 10, 15, 22, 40, 30, 45, 50, 65, 70, 80],
-};
+function groupAlertsByMonth(alerts) {
+  const monthMap = Array(12).fill(0);
+  alerts.forEach((alert) => {
+    if (alert.analyzed_at) {
+      const d = new Date(alert.analyzed_at);
 
-const BarChartAlertsOverTime = () => {
+      const month = d.getMonth();
+      monthMap[month]++;
+    }
+  });
+  return {
+    months: Array.from({ length: 12 }, (_, i) => (i + 1).toString()),
+    counts: monthMap,
+  };
+}
+
+const BarChartAlertsOverTime = ({ alerts = [] }) => {
   const theme = useTheme();
 
-  const option = useMemo(() => {
-    return {
+  // Xử lý dữ liệu động
+  const data = useMemo(() => groupAlertsByMonth(alerts), [alerts]);
+
+  const option = useMemo(
+    () => ({
       backgroundColor: theme.palette.background.paper,
       tooltip: {
         trigger: "axis",
@@ -21,7 +33,7 @@ const BarChartAlertsOverTime = () => {
       },
       xAxis: {
         type: "category",
-        data: sampleAlertsOverTime.months,
+        data: data.months,
         axisLine: { lineStyle: { color: theme.palette.text.primary } },
         axisLabel: { color: theme.palette.text.primary },
       },
@@ -36,10 +48,10 @@ const BarChartAlertsOverTime = () => {
           name: "Alerts Over Time",
           type: "bar",
           barWidth: "60%",
-          data: sampleAlertsOverTime.counts,
+          data: data.counts,
           itemStyle: {
             color: theme.palette.error.main,
-            borderRadius: [4, 4, 0, 0], // bo góc trên trái + trên phải
+            borderRadius: [4, 4, 0, 0],
           },
         },
       ],
@@ -50,8 +62,9 @@ const BarChartAlertsOverTime = () => {
         top: 30,
         containLabel: true,
       },
-    };
-  }, [theme]);
+    }),
+    [theme, data]
+  );
 
   return (
     <ReactECharts option={option} style={{ height: 280, width: "100%" }} />

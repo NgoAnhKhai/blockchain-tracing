@@ -1,3 +1,5 @@
+// MainHeader.jsx
+
 import React, { useState } from "react";
 import {
   Box,
@@ -13,6 +15,7 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { useLocation, useNavigate } from "react-router-dom";
 import SearchingBar from "../components/searching/SearchingBar";
+import WalletGraphSearchBar from "../components/searching/WalletGraphSearchBar";
 import { useViewMode } from "../context/ViewModeContext";
 import { LoginButton, RegisterButton } from "../components/button/ButtonAuth";
 import Login from "../components/auth/Login";
@@ -25,8 +28,12 @@ export default function MainHeader() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { viewMode, setViewMode } = useViewMode();
-  const showToggle = pathname === "/wallet-graph";
   const { user, signout } = useAuth();
+
+  // Đổi SearchBar theo route
+  const isWalletGraph = pathname === "/wallet-graph";
+  const showSearching = pathname !== "/alerts";
+  const showToggle = pathname === "/wallet-graph";
 
   const [mode, setMode] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -58,9 +65,11 @@ export default function MainHeader() {
       >
         {/* Left: Thanh tìm kiếm + Toggle */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Box sx={{ minWidth: 200, maxWidth: 360 }}>
-            <SearchingBar />
-          </Box>
+          {showSearching && (
+            <Box sx={{ minWidth: 200, maxWidth: 360 }}>
+              {isWalletGraph ? <WalletGraphSearchBar /> : <SearchingBar />}
+            </Box>
+          )}
           {showToggle && (
             <ToggleButtonGroup
               size="small"

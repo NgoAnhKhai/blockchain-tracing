@@ -5,6 +5,7 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  useTheme,
 } from "@mui/material";
 import WalletTableRow from "./WalletTableRow";
 
@@ -15,10 +16,29 @@ export default function WalletTable({
   onRowClick,
   formatAddress,
 }) {
+  const theme = useTheme();
+  const accent = theme.palette.primary.main;
+
   return (
     <Table size="small">
       <TableHead>
-        <TableRow>
+        <TableRow
+          sx={{
+            "& th": {
+              fontWeight: 900,
+              fontSize: 16,
+              fontFamily: "Inter, monospace",
+              letterSpacing: 0.5,
+              color: accent,
+              background:
+                theme.palette.mode === "dark"
+                  ? "#191228"
+                  : theme.palette.primary.light,
+              borderBottom: `2.5px solid ${accent}33`,
+              textShadow: `0 2px 8px ${accent}22`,
+            },
+          }}
+        >
           <TableCell>Address</TableCell>
           <TableCell>Name Tag</TableCell>
           <TableCell>Balance</TableCell>
@@ -33,6 +53,7 @@ export default function WalletTable({
             onToggleFollow={onToggleFollow}
             onRowClick={onRowClick}
             formatAddress={formatAddress}
+            accent={accent}
           />
         ))}
         {wallets.length === 0 && (

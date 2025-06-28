@@ -2,32 +2,55 @@ import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import RobotMascot from "../RobotMascot";
-
+import { Box, Typography, useTheme } from "@mui/material";
 import Logo from "/block_trace.png";
 
 export default function ProfileContent({ user }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
+
+  // Màu dynamic cho card & các element
+  const cardBg = isDark
+    ? "linear-gradient(120deg, #201c2b 70%, #231d34 100%)"
+    : "linear-gradient(120deg, #f4f3fd 60%, #ffeaf6 100%)";
+  const boxShadow = isDark ? "0 2px 18px #a076ff33" : "0 4px 36px #d1c6ee44";
+  const profileGradient = isDark
+    ? "linear-gradient(90deg, #a076ff, #ff4d88 65%)"
+    : "linear-gradient(90deg, #865dff, #ff4d88 65%)";
+  const mainText = isDark ? "#fff" : "#32214c";
+  const emailBg = isDark ? "#251b34" : "#e8e6fb";
+  const emailColor = isDark ? "#bb86fc" : "#945ad6";
+  const roleBg = isDark ? "#191623" : "#f2e6ff";
+  const roleColor = isDark ? "#a076ff" : "#7c3aed";
+  const quoteBg = isDark ? "#241c30" : "#f8eaff";
+  const quoteColor = isDark ? "#bdb2ff" : "#b493ff";
+  const aiColor = isDark ? "#a076ff" : "#865dff";
+
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         display: "flex",
         alignItems: "stretch",
         gap: 2,
-        padding: 32,
+        p: 4,
         minWidth: 420,
-        background: "linear-gradient(120deg, #201c2b 70%, #231d34 100%)",
-        borderRadius: 18,
-        boxShadow: "0 2px 18px #a076ff33",
+        background: cardBg,
+        borderRadius: 6,
+        boxShadow: boxShadow,
         position: "relative",
         flexDirection: "column",
+        fontFamily: "Inter, monospace",
+        transition: "all .3s",
       }}
     >
-      {/* HEADER PROFILE với logo + chữ */}
-      <div
-        style={{
+      {/* HEADER PROFILE */}
+      <Box
+        sx={{
           display: "flex",
           alignItems: "center",
-          marginRight: 52,
+          mr: 7,
           justifyContent: "center",
+          fontFamily: "Inter, monospace",
         }}
       >
         <img
@@ -36,127 +59,140 @@ export default function ProfileContent({ user }) {
           style={{
             width: 144,
             height: 84,
-            filter: "drop-shadow(0 2px 8px #a076ff55)",
+            filter: isDark
+              ? "drop-shadow(0 2px 8px #a076ff55)"
+              : "drop-shadow(0 2px 12px #d1c6ee66)",
             borderRadius: 8,
+            background: isDark ? "none" : "#fff8",
           }}
         />
-        <span
-          style={{
+        <Typography
+          component="span"
+          sx={{
             fontSize: 45,
             fontWeight: 800,
             letterSpacing: 1,
+            ml: 2,
             color: "transparent",
-            background: "linear-gradient(90deg, #a076ff, #ff4d88 65%)",
+            background: profileGradient,
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
-            textShadow: "0 2px 8px #a076ff66",
+            textShadow: isDark ? "0 2px 8px #a076ff66" : "0 2px 12px #d1c6ee55",
             textTransform: "uppercase",
+            fontFamily: "inherit",
+            userSelect: "none",
           }}
         >
           Profile
-        </span>
-      </div>
+        </Typography>
+      </Box>
 
-      <div style={{ display: "flex", gap: 32 }}>
-        {/* AVATAR bên trái + hình minh hoạ phía dưới */}
-        <div style={{ flex: "0 0 120px", textAlign: "center" }}>
-          <div style={{ marginTop: 18 }}>
+      <Box sx={{ display: "flex", gap: 4 }}>
+        {/* AVATAR & MASCOT */}
+        <Box sx={{ flex: "0 0 120px", textAlign: "center" }}>
+          <Box sx={{ mt: 2.5 }}>
             <RobotMascot />
-            <div
-              style={{
-                color: "#a076ff",
+            <Typography
+              sx={{
+                color: aiColor,
                 fontWeight: 600,
                 fontSize: 15,
-                marginTop: 6,
+                mt: 0.6,
                 letterSpacing: 0.1,
+                fontFamily: "inherit",
               }}
             >
               AI Guardian
-            </div>
-          </div>
-        </div>
+            </Typography>
+          </Box>
+        </Box>
 
-        {/* Thông tin user bên phải */}
-        <div
-          style={{
+        {/* Thông tin user */}
+        <Box
+          sx={{
             flex: 1,
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
+            fontFamily: "inherit",
           }}
         >
-          <div
-            style={{ display: "flex", alignItems: "center", marginBottom: 10 }}
-          >
-            <PersonIcon sx={{ color: "#a076ff", marginRight: 8 }} />
-            <h2
-              style={{
-                color: "#fff",
-                margin: 0,
+          {/* Username */}
+          <Box sx={{ display: "flex", alignItems: "center", mb: 1.2 }}>
+            <PersonIcon sx={{ color: aiColor, mr: 1 }} />
+            <Typography
+              variant="h5"
+              sx={{
+                color: mainText,
                 fontWeight: 700,
                 fontSize: 26,
+                fontFamily: "inherit",
+                m: 0,
               }}
             >
               {user.username || "No Name"}
-            </h2>
-          </div>
-
-          <div
-            style={{ display: "flex", alignItems: "center", marginBottom: 10 }}
-          >
-            <EmailIcon sx={{ color: "#fd4d85", marginRight: 8 }} />
-            <span
-              style={{
-                color: "#bb86fc",
-                background: "#251b34",
-                padding: "6px 14px",
-                borderRadius: 8,
+            </Typography>
+          </Box>
+          {/* Email */}
+          <Box sx={{ display: "flex", alignItems: "center", mb: 1.2 }}>
+            <EmailIcon sx={{ color: "#fd4d85", mr: 1 }} />
+            <Typography
+              sx={{
+                color: emailColor,
+                background: emailBg,
+                px: 2,
+                py: 0.6,
+                borderRadius: 1.2,
                 fontWeight: 600,
                 fontSize: 16,
                 letterSpacing: 0.4,
+                fontFamily: "inherit",
               }}
             >
               {user.email}
-            </span>
-          </div>
-
-          <div
-            style={{ display: "flex", alignItems: "center", marginBottom: 10 }}
-          >
-            <VerifiedUserIcon sx={{ color: "#52c1fa", marginRight: 8 }} />
-            <span
-              style={{
-                background: "#191623",
-                padding: "5px 18px",
-                borderRadius: 8,
+            </Typography>
+          </Box>
+          {/* Role */}
+          <Box sx={{ display: "flex", alignItems: "center", mb: 1.2 }}>
+            <VerifiedUserIcon sx={{ color: "#52c1fa", mr: 1 }} />
+            <Typography
+              sx={{
+                background: roleBg,
+                px: 2.5,
+                py: 0.6,
+                borderRadius: 1.2,
                 fontWeight: 600,
-                color: "#a076ff",
+                color: roleColor,
                 fontSize: 16,
                 letterSpacing: 0.35,
+                fontFamily: "inherit",
               }}
             >
               Role: {user.role}
-            </span>
-          </div>
-
-          <div
-            style={{
-              marginTop: 18,
-              color: "#bdb2ff",
-              background: "#241c30",
-              borderRadius: 10,
-              padding: "10px 18px",
+            </Typography>
+          </Box>
+          {/* Quote */}
+          <Box
+            sx={{
+              mt: 2.3,
+              color: quoteColor,
+              background: quoteBg,
+              borderRadius: 1.3,
+              px: 2.5,
+              py: 1.2,
               fontSize: 15.5,
               fontWeight: 500,
-              boxShadow: "0 1px 8px #a076ff20",
+              fontFamily: "inherit",
+              boxShadow: isDark
+                ? "0 1px 8px #a076ff20"
+                : "0 2px 10px #e9d8fd22",
+              fontStyle: "italic",
             }}
           >
-            <span style={{ fontStyle: "italic" }}>
-              “Welcome to your blockchain workspace”
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
+            “Welcome to your blockchain workspace”
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }

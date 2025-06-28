@@ -19,53 +19,74 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import WalletSelector from "../components/WalletSelector";
 import LargeAreaChart from "../components/charts/LargeAreaChart";
 import WeeklyAreaChart from "../components/charts/WeeklyAreaChart";
-import { getTxList } from "../services/GetPopularWallet";
 import SmallLoader from "../components/loading/SmallLoader";
+import { getTxList } from "../services/GetPopularWallet";
+import { GetAlertsDetailUser } from "../services/AIModel/GetAlertsDetailUser";
+import RelatedAlertsTable from "../components/RelatedAlertsTable";
 
 const RECENT_COUNT = 8;
 
 const HomePage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+
   const [selectedWallet, setSelectedWallet] = useState(null);
   const [txList, setTxList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // Alert state
+  const [alertDetail, setAlertDetail] = useState(null);
+  const [alertLoading, setAlertLoading] = useState(false);
+  const [alertError, setAlertError] = useState("");
+
+  // ===== Fetch Transactions =====
   useEffect(() => {
-    if (!selectedWallet) {
-      setSelectedWallet({
-        label: "Vitalik Buterin",
-        address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
-      });
-    }
+    if (!selectedWallet?.address) return;
+    setLoading(true);
+    getTxList(selectedWallet.address)
+      .then((txs) => setTxList(txs))
+      .finally(() => setLoading(false));
   }, [selectedWallet]);
 
+  // ===== Fetch Alert by Wallet =====
   useEffect(() => {
-    if (selectedWallet) {
-      setLoading(true);
-      getTxList(selectedWallet.address).then((txs) => {
-        setTxList(txs);
-        setLoading(false);
-      });
+    if (!selectedWallet?.address) {
+      setAlertDetail(null);
+      return;
     }
+    setAlertLoading(true);
+    setAlertError("");
+    setAlertDetail(null);
+    // Fetch alert
+    (async () => {
+      try {
+        const data = await GetAlertsDetailUser(selectedWallet.address);
+        setAlertDetail(data);
+      } catch (err) {
+        setAlertDetail(null);
+        setAlertError("Failed to fetch alert data.");
+      } finally {
+        setAlertLoading(false);
+      }
+    })();
   }, [selectedWallet]);
 
+  // ===== Data Helpers =====
   const oneYearAgo = Date.now() - 365 * 24 * 3600 * 1000;
   const filteredTx = useMemo(
     () => txList.filter((tx) => tx.timeStamp * 1000 >= oneYearAgo),
     [txList]
   );
-
   const sortedTx = useMemo(
     () => [...filteredTx].sort((a, b) => b.timeStamp - a.timeStamp),
     [filteredTx]
   );
-
   const recentTx = useMemo(() => sortedTx.slice(0, RECENT_COUNT), [sortedTx]);
 
-  const handleExpand = (route) => {
+  function handleExpand(route) {
+    if (!selectedWallet?.address) return;
     navigate(`${route}?address=${selectedWallet.address}`);
-  };
+  }
   function shortHash(str) {
     if (!str) return "";
     return str.slice(0, 10) + "…" + str.slice(-6);
@@ -83,29 +104,40 @@ const HomePage = () => {
   }
   const isImportant = (tx) => parseFloat(tx.value) / 1e18 > 100;
 
-  const alertData = [
-    {
-      severity: "Medium",
-      wallet: "06fa...e07",
-      type: "Large Transaction",
-      time: "2 hrs ago",
-    },
-    {
-      severity: "Medium",
-      wallet: "06fa...e07",
-      type: "Surge in Activity",
-      time: "2 hrs ago",
-    },
-    {
-      severity: "High",
-      wallet: "06fa...ea9",
-      type: "Surge in Activity",
-      time: "2 hrs ago",
-    },
-  ];
+  // ===== Map Alert data for Table =====
+  const alertRows = useMemo(() => {
+    if (!alertDetail || !alertDetail.modelResponse) return [];
+    const { modelResponse, additionalInfo } = alertDetail;
+    return [
+      {
+        severity: modelResponse.risk_level || "Normal",
+        wallet: shortAddr(modelResponse.address),
+        type: modelResponse.prediction || "Normal",
+        summary: modelResponse.summarize,
+        time: additionalInfo?.["Detection Time"] || "--",
+      },
+    ];
+  }, [alertDetail]);
+
+  // Accent màu hồng tím
+  const accent = theme.palette.primary.main;
+  const accentLight = theme.palette.primary.light;
+  const accentDark = theme.palette.primary.dark;
+  const accentGradient =
+    theme.palette.mode === "dark"
+      ? `linear-gradient(90deg, ${theme.palette.background.paper} 60%, ${accent} 100%)`
+      : `linear-gradient(90deg, #ffe2fc 0%, ${accentLight} 80%)`;
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 3,
+        bgcolor: theme.palette.background.default,
+        minHeight: "100%",
+      }}
+    >
       {/* Selector */}
       <Box sx={{ px: 3, pt: 1, display: "flex", justifyContent: "flex-end" }}>
         <WalletSelector
@@ -116,7 +148,14 @@ const HomePage = () => {
 
       {/* Charts */}
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-        <Card sx={{ flex: 1, backgroundColor: "rgba(70, 14, 82, 0.08)" }}>
+        <Card
+          sx={{
+            flex: 1,
+            background: theme.palette.background.paper,
+            borderRadius: 3,
+            boxShadow: theme.shadows[3],
+          }}
+        >
           <CardContent
             sx={{
               minHeight: 220,
@@ -128,7 +167,14 @@ const HomePage = () => {
             {loading ? <SmallLoader /> : <LargeAreaChart txList={txList} />}
           </CardContent>
         </Card>
-        <Card sx={{ flex: 1, backgroundColor: "rgba(70, 14, 82, 0.08)" }}>
+        <Card
+          sx={{
+            flex: 1,
+            background: theme.palette.background.paper,
+            borderRadius: 3,
+            boxShadow: theme.shadows[3],
+          }}
+        >
           <CardContent
             sx={{
               minHeight: 220,
@@ -149,13 +195,21 @@ const HomePage = () => {
           sx={{
             flex: 2,
             position: "relative",
-            background: "linear-gradient(90deg, #19183b 70%, #31236b 100%)",
+            background:
+              theme.palette.mode === "dark"
+                ? theme.palette.background.paper
+                : accentGradient,
             borderRadius: 3,
-            boxShadow: "0 4px 32px #2ec7fd18",
+            boxShadow: theme.shadows[6],
+            border: `1.5px solid ${accentLight}40`,
           }}
         >
           <CardContent
-            sx={{ minHeight: 270, display: "flex", flexDirection: "column" }}
+            sx={{
+              minHeight: 270,
+              display: "flex",
+              flexDirection: "column",
+            }}
           >
             <Box
               sx={{
@@ -170,7 +224,7 @@ const HomePage = () => {
                 fontWeight={900}
                 sx={{
                   fontFamily: "Inter, monospace",
-                  color: "#23e6ff",
+                  color: accent,
                   letterSpacing: 1,
                 }}
               >
@@ -180,10 +234,12 @@ const HomePage = () => {
                 size="small"
                 onClick={() => handleExpand("/transactions")}
                 sx={{
-                  bgcolor: "#262152",
-                  color: "#23e6ff",
+                  bgcolor: accentLight,
+                  color: accentDark,
                   borderRadius: 2,
-                  "&:hover": { bgcolor: "#341f78" },
+                  "&:hover": { bgcolor: accent, color: "#fff" },
+                  boxShadow: theme.shadows[1],
+                  transition: "all .15s",
                 }}
               >
                 <OpenInNewIcon />
@@ -211,9 +267,12 @@ const HomePage = () => {
                         fontSize: 15,
                         fontFamily: "monospace",
                         background:
-                          "linear-gradient(90deg, #251b45 60%, #26285c 100%)",
-                        color: "#23e6ff",
-                        borderBottom: "2.5px solid #23e6ff33",
+                          theme.palette.mode === "dark"
+                            ? "#191228"
+                            : accentLight,
+                        color:
+                          theme.palette.mode === "dark" ? "#fff" : accentDark,
+                        borderBottom: `2.5px solid ${accent}33`,
                       },
                     }}
                   >
@@ -234,12 +293,19 @@ const HomePage = () => {
                           important
                             ? {
                                 background:
-                                  "linear-gradient(90deg,#1b5eaf0f 0%, #23e6ff25 100%)",
-                                borderLeft: "6px solid #23e6ff",
+                                  theme.palette.mode === "dark"
+                                    ? "#27113a"
+                                    : `${accentLight}44`,
+                                borderLeft: `6px solid ${accent}`,
                                 fontWeight: 900,
                               }
                             : {
-                                "&:hover": { background: "#e2489e10" },
+                                "&:hover": {
+                                  background:
+                                    theme.palette.mode === "dark"
+                                      ? "#31213d"
+                                      : `${accentLight}18`,
+                                },
                               }
                         }
                         hover
@@ -249,7 +315,9 @@ const HomePage = () => {
                             <Tooltip title={tx.hash} arrow>
                               <span
                                 style={{
-                                  color: important ? "#e2489e" : "#23e6ff",
+                                  color: important
+                                    ? theme.palette.error.main
+                                    : accent,
                                   fontWeight: important ? 900 : 700,
                                 }}
                               >
@@ -263,7 +331,7 @@ const HomePage = () => {
                             <span
                               style={{
                                 fontFamily: "monospace",
-                                color: "#a5ebff",
+                                color: theme.palette.text.secondary,
                               }}
                             >
                               {shortAddr(tx.from)}
@@ -275,7 +343,7 @@ const HomePage = () => {
                             <span
                               style={{
                                 fontFamily: "monospace",
-                                color: "#a5ebff",
+                                color: theme.palette.text.secondary,
                               }}
                             >
                               {shortAddr(tx.to)}
@@ -285,7 +353,9 @@ const HomePage = () => {
                         <TableCell align="right">
                           <span
                             style={{
-                              color: important ? "#e2489e" : "#12e39a",
+                              color: important
+                                ? theme.palette.error.main
+                                : theme.palette.success.main,
                               fontWeight: important ? 900 : 700,
                               fontFamily: "monospace",
                             }}
@@ -296,13 +366,13 @@ const HomePage = () => {
                             <Chip
                               label="LARGE"
                               size="small"
-                              color="error"
+                              color="primary"
                               sx={{
                                 ml: 1,
                                 fontWeight: 900,
-                                bgcolor: "#e2489e",
+                                bgcolor: accent,
                                 color: "#fff",
-                                boxShadow: "0 2px 12px #e2489e88",
+                                boxShadow: `0 2px 12px ${accent}77`,
                                 borderRadius: 1.5,
                                 fontSize: 11,
                                 fontFamily: "Inter, monospace",
@@ -313,7 +383,7 @@ const HomePage = () => {
                         <TableCell align="right">
                           <span
                             style={{
-                              color: "#fff",
+                              color: theme.palette.text.primary,
                               fontFamily: "Inter, monospace",
                               fontSize: 14,
                             }}
@@ -330,76 +400,22 @@ const HomePage = () => {
           </CardContent>
         </Card>
 
-        {/* Risk Alerts */}
         <Card
           sx={{
             flex: 1,
             position: "relative",
-            backgroundColor: "rgba(70, 14, 82, 0.08)",
+            background: theme.palette.background.paper,
+            borderRadius: 3,
+            boxShadow: theme.shadows[4],
+            display: "flex",
+            flexDirection: "column",
           }}
         >
-          <CardContent
-            sx={{ minHeight: 270, display: "flex", flexDirection: "column" }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Typography variant="h6">Risk Alerts</Typography>
-              <IconButton size="small" onClick={() => handleExpand("/alerts")}>
-                <OpenInNewIcon />
-              </IconButton>
-            </Box>
-            {loading ? (
-              <Box
-                sx={{
-                  flex: 1,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minHeight: 120,
-                }}
-              >
-                <SmallLoader />
-              </Box>
-            ) : (
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Severity</TableCell>
-                    <TableCell>Wallet</TableCell>
-                    <TableCell>Alert Type</TableCell>
-                    <TableCell>Time</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {alertData.map((row, idx) => (
-                    <TableRow
-                      key={idx}
-                      sx={{
-                        "&:nth-of-type(odd)": {
-                          backgroundColor: theme.palette.action.hover,
-                        },
-                      }}
-                    >
-                      <TableCell>
-                        <Chip
-                          label={row.severity}
-                          color={row.severity === "High" ? "error" : "warning"}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>{row.wallet}</TableCell>
-                      <TableCell>{row.type}</TableCell>
-                      <TableCell>{row.time}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
+          <CardContent sx={{ minHeight: 260, p: 0 }}>
+            <RelatedAlertsTable
+              walletId={selectedWallet?.address}
+              navigate={navigate}
+            />
           </CardContent>
         </Card>
       </Box>

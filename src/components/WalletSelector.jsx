@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Select,
@@ -6,27 +6,59 @@ import {
   FormControl,
   InputBase,
   useTheme,
+  CircularProgress,
+  Typography,
 } from "@mui/material";
 import WalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { GetFeaturedWallet } from "../services/wallets/GetFeaturedWallet";
 
-// 3 ví nổi tiếng với màu nhận diện
-const famousWallets = [
-  {
-    label: "Vitalik Buterin",
-    address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
-    color: "#9C27B0",
-  },
-
-  {
-    label: "Coinbase",
-    address: "0x503828976D22510aad0201ac7EC88293211D23Da",
-    color: "#2979FF",
-  },
-];
+function colorFromAddress(address) {
+  if (!address) return "#607d8b";
+  const hash = parseInt(address.slice(-6), 16);
+  const r = (hash >> 16) & 0xff;
+  const g = (hash >> 8) & 0xff;
+  const b = hash & 0xff;
+  return `rgb(${200 + (r % 50)},${180 + (g % 50)},${220 + (b % 35)})`;
+}
+function shortAddr(addr) {
+  if (!addr) return "";
+  return addr.slice(0, 6) + "..." + addr.slice(-4);
+}
 
 export default function WalletSelector({ selected, onSelect }) {
   const theme = useTheme();
+  const [wallets, setWallets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    setError("");
+    async function fetchWallets() {
+      try {
+        const data = await GetFeaturedWallet();
+        console.log("data:", data.featured_wallets);
+        const walletAddress = data.featured_wallets;
+        if (!Array.isArray(data.featured_wallets))
+          throw new Error("Data response not fit");
+        if (isMounted) setWallets(walletAddress.slice(0, 2));
+        if (isMounted && data.length > 0 && !selected) {
+          onSelect?.(data[0]);
+        }
+      } catch (err) {
+        setWallets([]);
+        setError("Can not loading wallet");
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    fetchWallets();
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line
+  }, []);
 
   return (
     <Box
@@ -42,56 +74,83 @@ export default function WalletSelector({ selected, onSelect }) {
         height: 50,
       }}
     >
-      {/* Icon vali */}
       <WalletIcon
         fontSize="small"
         sx={{ color: theme.palette.text.primary, mr: 1 }}
       />
-
       <FormControl variant="standard" sx={{ flex: 1 }}>
-        <Select
-          value={selected?.address || ""}
-          onChange={(e) => {
-            const w = famousWallets.find((w) => w.address === e.target.value);
-            onSelect(w);
-          }}
-          displayEmpty
-          input={<InputBase />}
-          IconComponent={ExpandMoreIcon}
-          sx={{
-            // remove default underline and padding
-            ".MuiSelect-select": {
-              padding: 0,
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            },
-            ".MuiSelect-icon": {
-              color: theme.palette.text.primary,
-            },
-            fontSize: 14,
-            color: theme.palette.text.primary,
-          }}
-        >
-          {famousWallets.map((w) => (
-            <MenuItem
-              key={w.address}
-              value={w.address}
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+        {loading ? (
+          <Box sx={{ display: "flex", alignItems: "center", pl: 1 }}>
+            <CircularProgress size={18} />
+            <Box
+              sx={{ fontSize: 13, ml: 1, color: theme.palette.text.secondary }}
             >
-              {/* chấm tròn màu */}
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  backgroundColor: w.color,
-                }}
-              />
-              <Box component="span">{w.label}</Box>
-            </MenuItem>
-          ))}
-        </Select>
+              Loading...
+            </Box>
+          </Box>
+        ) : error ? (
+          <Typography color="error" sx={{ fontSize: 13, pl: 1 }}>
+            {error}
+          </Typography>
+        ) : (
+          <Select
+            value={selected?.address || wallets[0]?.address || ""}
+            onChange={(e) => {
+              const found = wallets.find(
+                (w) =>
+                  (w.address || w.wallet_address)?.toLowerCase() ===
+                  e.target.value.toLowerCase()
+              );
+              onSelect && onSelect(found || null);
+            }}
+            displayEmpty
+            input={<InputBase />}
+            IconComponent={ExpandMoreIcon}
+            sx={{
+              ".MuiSelect-select": {
+                padding: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              },
+              ".MuiSelect-icon": {
+                color: theme.palette.text.primary,
+              },
+              fontSize: 14,
+              color: theme.palette.text.primary,
+            }}
+          >
+            {wallets.length === 0 ? (
+              <MenuItem value="" disabled>
+                Have not wallet popular
+              </MenuItem>
+            ) : (
+              wallets.map((w) => {
+                const label =
+                  w.label || w.name || shortAddr(w.address || w.wallet_address);
+                const addr = w.address || w.wallet_address || "";
+                const color = w.color || colorFromAddress(addr);
+                return (
+                  <MenuItem
+                    key={addr}
+                    value={addr}
+                    sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                  >
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        backgroundColor: color,
+                      }}
+                    />
+                    <Box component="span">{label}</Box>
+                  </MenuItem>
+                );
+              })
+            )}
+          </Select>
+        )}
       </FormControl>
     </Box>
   );

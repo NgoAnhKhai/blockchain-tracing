@@ -25,7 +25,6 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import SmallLoader from "../components/loading/SmallLoader";
 import { getTxList } from "../services/GetPopularWallet";
 
-const PAGE_SIZE = 10;
 const isImportant = (tx) => parseFloat(tx.value) / 1e18 > 100;
 
 function shortHash(str) {
@@ -46,12 +45,39 @@ function formatBigNumber(num) {
 
 export default function TransactionsPage() {
   const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
   const [searchParams] = useSearchParams();
   const address = searchParams.get("address");
   const [txList, setTxList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [amountFilter, setAmountFilter] = useState("all");
+  const [pageSize, setPageSize] = useState(10);
+
+  // Color
+  const accent = theme.palette.primary.main;
+  const accentLight = theme.palette.primary.light;
+  const accentDark = theme.palette.primary.dark;
+  const paperBg = theme.palette.background.paper;
+  const divider = theme.palette.divider;
+  const textPrimary = theme.palette.text.primary;
+  const textSecondary = theme.palette.text.secondary;
+
+  useEffect(() => {
+    function calcPageSize() {
+      const headerHeight = 170;
+      const paginationHeight = 65;
+      const padding = 70;
+      const rowHeight = 52;
+      const usable =
+        window.innerHeight - (headerHeight + paginationHeight + padding);
+      const rows = Math.max(5, Math.floor(usable / rowHeight));
+      setPageSize(rows);
+    }
+    calcPageSize();
+    window.addEventListener("resize", calcPageSize);
+    return () => window.removeEventListener("resize", calcPageSize);
+  }, []);
 
   useEffect(() => {
     if (!address) return;
@@ -75,33 +101,43 @@ export default function TransactionsPage() {
     }
   }, [txList, amountFilter]);
 
-  const totalPages = Math.ceil(filteredTxList.length / PAGE_SIZE);
+  const totalPages = Math.ceil(filteredTxList.length / pageSize);
   const paginatedTx = useMemo(
     () =>
       filteredTxList.slice(
-        (currentPage - 1) * PAGE_SIZE,
-        currentPage * PAGE_SIZE
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
       ),
-    [filteredTxList, currentPage]
+    [filteredTxList, currentPage, pageSize]
   );
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [amountFilter]);
+  }, [amountFilter, pageSize]);
+
+  // Styles
+  const cardHeaderBg = isDark
+    ? paperBg
+    : `linear-gradient(90deg, ${accentLight} 45%, ${paperBg} 100%)`;
+  const tableHeaderBg = isDark
+    ? "#1B1729"
+    : `linear-gradient(90deg, ${accentLight} 60%, ${paperBg} 100%)`;
+  const importantRowBg = isDark ? "#26162d" : `${accentLight}18`;
+  const tableRowHover = isDark ? "#32213d" : `${accentLight}12`;
 
   return (
     <Box
       sx={{
         p: 2,
         bgcolor: theme.palette.background.default,
-        color: theme.palette.text.primary,
-        minHeight: "100vh",
+        color: textPrimary,
+        minHeight: "100%",
         fontFamily: "Inter, Roboto, monospace",
       }}
     >
       <Box
         sx={{
-          maxWidth: "1200px",
+          maxWidth: "100%",
           margin: "0 auto",
           display: "flex",
           flexDirection: "column",
@@ -111,10 +147,11 @@ export default function TransactionsPage() {
         {/* Header */}
         <Card
           sx={{
-            background: "linear-gradient(90deg, #241445 45%, #323f6e 100%)",
-            borderRadius: 3,
-            boxShadow: "0 8px 32px #5411c747",
-            color: "#fff",
+            background: cardHeaderBg,
+            borderRadius: 4,
+            boxShadow: theme.shadows[5],
+            color: isDark ? accent : accentDark,
+            border: isDark ? `1.5px solid ${accent}22` : undefined,
           }}
         >
           <CardContent>
@@ -122,8 +159,8 @@ export default function TransactionsPage() {
               <AccountBalanceWalletIcon
                 sx={{
                   fontSize: 40,
-                  color: "#23e6ff",
-                  textShadow: "0 1px 12px #23e6ff55",
+                  color: accent,
+                  textShadow: isDark ? "none" : `0 1px 12px ${accentLight}66`,
                 }}
               />
               <Typography
@@ -131,8 +168,8 @@ export default function TransactionsPage() {
                 fontWeight={900}
                 sx={{
                   letterSpacing: 2,
-                  color: "#e2489e",
-                  textShadow: "0 2px 8px #e2489e44, 0 1px 8px #23e6ff77",
+                  color: accent,
+                  textShadow: isDark ? "none" : `0 2px 8px ${accentLight}33`,
                   mr: 1,
                   fontFamily: "Inter, Roboto, sans-serif",
                 }}
@@ -145,14 +182,14 @@ export default function TransactionsPage() {
                 sx={{
                   fontWeight: 700,
                   fontSize: 17,
-                  bgcolor: "#3a3375",
-                  color: "#23e6ff",
+                  bgcolor: isDark ? accentDark : accentLight,
+                  color: "#fff",
                   letterSpacing: 1,
                   px: 2,
                   borderRadius: 2,
-                  boxShadow: "0 2px 16px #23e6ff55",
+                  boxShadow: isDark ? undefined : `0 2px 16px ${accentLight}77`,
                   fontFamily: "monospace",
-                  border: "1.5px dashed #1be7ff88",
+                  border: `1.5px dashed ${accentLight}66`,
                 }}
               />
             </Box>
@@ -164,10 +201,13 @@ export default function TransactionsPage() {
                   label="Filter by Amount"
                   onChange={(e) => setAmountFilter(e.target.value)}
                   sx={{
-                    bgcolor: "#221d3a",
-                    color: "#23e6ff",
+                    bgcolor: isDark ? "#151025" : paperBg,
+                    color: accent,
                     fontWeight: 700,
                     fontFamily: "Inter, monospace",
+                    "& .MuiSvgIcon-root": {
+                      color: accent,
+                    },
                   }}
                 >
                   <MenuItem value="all">All</MenuItem>
@@ -185,10 +225,10 @@ export default function TransactionsPage() {
           sx={{
             width: "100%",
             overflowX: "auto",
-            backgroundColor: theme.palette.background.paper,
+            backgroundColor: paperBg,
             borderRadius: 3,
             mt: 0,
-            boxShadow: "0 2px 24px #332d4a33",
+            boxShadow: theme.shadows[2],
             fontFamily: "Inter, Roboto, monospace",
           }}
         >
@@ -214,10 +254,9 @@ export default function TransactionsPage() {
                       fontWeight: 800,
                       fontSize: 16,
                       letterSpacing: 0.7,
-                      background:
-                        "linear-gradient(90deg, #262152 65%, #2e315a 100%)",
-                      color: "#23e6ff",
-                      borderBottom: `2.5px solid #34157e88`,
+                      background: tableHeaderBg,
+                      color: isDark ? "#fff" : accentDark,
+                      borderBottom: `2.5px solid ${accentLight}88`,
                       fontFamily: "monospace",
                     },
                   }}
@@ -238,17 +277,15 @@ export default function TransactionsPage() {
                       sx={
                         important
                           ? {
-                              background:
-                                "linear-gradient(90deg,#461b8d0a 0%, #22fff26c 100%)",
-                              boxShadow: "0 2px 16px #23e6ff55",
+                              background: importantRowBg,
                               fontWeight: 900,
-                              borderLeft: "6px solid #23e6ff",
+                              borderLeft: `6px solid ${accent}`,
                               transition: "background 0.15s",
                             }
                           : {
                               transition: "background 0.18s",
                               "&:hover": {
-                                background: "#e2489e18",
+                                background: tableRowHover,
                               },
                             }
                       }
@@ -258,7 +295,11 @@ export default function TransactionsPage() {
                           <span
                             style={{
                               fontFamily: "monospace",
-                              color: important ? "#e2489e" : "#23e6ff",
+                              color: important
+                                ? accent
+                                : isDark
+                                ? "#fff"
+                                : accentDark,
                               fontWeight: important ? 900 : 700,
                               fontSize: 15,
                               letterSpacing: 0.5,
@@ -273,7 +314,7 @@ export default function TransactionsPage() {
                           <span
                             style={{
                               fontFamily: "monospace",
-                              color: "#a5ebff",
+                              color: isDark ? textSecondary : accentDark,
                             }}
                           >
                             {shortAddr(tx.from)}
@@ -285,7 +326,7 @@ export default function TransactionsPage() {
                           <span
                             style={{
                               fontFamily: "monospace",
-                              color: "#a5ebff",
+                              color: isDark ? textSecondary : accentDark,
                             }}
                           >
                             {shortAddr(tx.to)}
@@ -295,7 +336,9 @@ export default function TransactionsPage() {
                       <TableCell align="right">
                         <span
                           style={{
-                            color: important ? "#e2489e" : "#12e39a",
+                            color: important
+                              ? accent
+                              : theme.palette.success.main,
                             fontWeight: important ? 900 : 700,
                             fontSize: 16,
                             fontFamily: "monospace",
@@ -307,13 +350,12 @@ export default function TransactionsPage() {
                           <Chip
                             label="LARGE"
                             size="small"
-                            color="error"
+                            color="primary"
                             sx={{
                               ml: 1,
                               fontWeight: 900,
-                              bgcolor: "#e2489e",
+                              bgcolor: accent,
                               color: "#fff",
-                              boxShadow: "0 2px 12px #e2489e88",
                               borderRadius: 1.5,
                               fontSize: 12,
                               fontFamily: "Inter, monospace",
@@ -324,7 +366,7 @@ export default function TransactionsPage() {
                       <TableCell align="right">
                         <span
                           style={{
-                            color: "#fff",
+                            color: isDark ? "#fff" : textPrimary,
                             fontFamily: "Inter, monospace",
                             fontSize: 15,
                           }}
@@ -353,9 +395,9 @@ export default function TransactionsPage() {
               alignItems: "center",
               p: 1.5,
               gap: 1,
-              borderTop: `1px solid ${theme.palette.divider}`,
-              background: "#221d3a",
-              borderRadius: "0 0 12px 12px",
+              borderTop: `1px solid ${divider}`,
+              background: paperBg,
+              borderRadius: "0 0 18px 18px",
             }}
           >
             <IconButton
@@ -363,9 +405,10 @@ export default function TransactionsPage() {
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               disabled={currentPage === 1}
               sx={{
-                bgcolor: "#19162d",
-                color: "#23e6ff",
-                "&:hover": { bgcolor: "#27215b" },
+                bgcolor: accentLight,
+                color: accentDark,
+                "&:hover": { bgcolor: accent, color: "#fff" },
+                transition: "all .15s",
               }}
             >
               <ChevronLeft />
@@ -373,7 +416,7 @@ export default function TransactionsPage() {
             <Typography
               variant="body2"
               sx={{
-                color: "#23e6ff",
+                color: accentDark,
                 fontWeight: 800,
                 fontSize: 16,
                 fontFamily: "monospace",
@@ -386,9 +429,10 @@ export default function TransactionsPage() {
               onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               disabled={currentPage === totalPages}
               sx={{
-                bgcolor: "#19162d",
-                color: "#23e6ff",
-                "&:hover": { bgcolor: "#27215b" },
+                bgcolor: accentLight,
+                color: accentDark,
+                "&:hover": { bgcolor: accent, color: "#fff" },
+                transition: "all .15s",
               }}
             >
               <ChevronRight />

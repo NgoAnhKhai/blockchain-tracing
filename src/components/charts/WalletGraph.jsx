@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from "react";
+import React, { useEffect, useRef, useMemo, useState } from "react";
 import * as d3 from "d3";
 import { useTheme } from "@mui/material";
 
@@ -29,6 +29,8 @@ export default function WalletGraph({
   const ref = useRef();
 
   const [sentColor, receivedColor] = useMemo(generate2DistinctPastel, [center]);
+  // Popup state
+  const [hoveredNode, setHoveredNode] = useState(null);
 
   useEffect(() => {
     const nodesMap = new Map();
@@ -129,12 +131,38 @@ export default function WalletGraph({
           .transition()
           .duration(160)
           .attr("r", d.isCenter ? 32 : 18);
+        const matrix = this.getScreenCTM();
+        if (!matrix) return;
+        const { x, y } = this;
+        const svgRect = ref.current.getBoundingClientRect();
+        const cx = +this.getAttribute("cx");
+        const cy = +this.getAttribute("cy");
+        const point = ref.current.createSVGPoint();
+        point.x = cx;
+        point.y = cy;
+        const transformed = point.matrixTransform(
+          this.ownerSVGElement.getScreenCTM()
+        );
+        setHoveredNode({
+          address: d.id,
+          x: transformed.x - svgRect.left,
+          y: transformed.y - svgRect.top,
+        });
+      })
+      .on("mousemove", function (event, d) {
+        const svgRect = ref.current.getBoundingClientRect();
+        setHoveredNode({
+          address: d.id,
+          x: event.clientX - svgRect.left,
+          y: event.clientY - svgRect.top,
+        });
       })
       .on("mouseout", function (event, d) {
         d3.select(this)
           .transition()
           .duration(160)
           .attr("r", d.isCenter ? 26 : 14);
+        setHoveredNode(null);
       });
 
     node.call(
@@ -200,8 +228,40 @@ export default function WalletGraph({
 
   // Legend
   return (
-    <div style={{ width: "100%", height: "100%", position: "relative" }}>
+    <div style={{ width: "100%", height: "80vh", position: "relative" }}>
       <svg ref={ref} style={{ width: "100%", height: "100%" }} />
+      {/* ===== POPUP HIỆN ADDRESS KHI HOVER ===== */}
+      {hoveredNode && (
+        <div
+          style={{
+            position: "absolute",
+            left: hoveredNode.x,
+            top: hoveredNode.y - 34,
+            transform: "translate(-50%,-100%)",
+            pointerEvents: "none",
+            padding: "8px 18px",
+            background: "linear-gradient(120deg,#24214a 60%,#792b99 120%)",
+            color: "#fff",
+            borderRadius: 9,
+            fontFamily: "monospace",
+            fontSize: 14,
+            fontWeight: 700,
+            boxShadow: "0 2px 12px #6d21ff2a",
+            zIndex: 22,
+            whiteSpace: "nowrap",
+            maxWidth: 320,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            border: "1.5px solid #8463e0",
+            opacity: 0.97,
+            transition: "opacity 0.12s",
+            letterSpacing: 0.6,
+          }}
+        >
+          {hoveredNode.address}
+        </div>
+      )}
+      {/* Legend dưới cùng giữ nguyên */}
       <div
         style={{
           position: "absolute",

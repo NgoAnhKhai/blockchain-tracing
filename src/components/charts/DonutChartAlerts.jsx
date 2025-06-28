@@ -1,20 +1,23 @@
-
 import React, { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 import { useTheme } from "@mui/material";
 
-// Dữ liệu mẫu cho Alerts Types
-const sampleAlertTypes = [
-  { value: 35, name: "Large Transaction" },
-  { value: 24, name: "Surge in Activity" },
-  { value: 10, name: "Other Alerts" },
-];
+function groupByType(alerts, key = "prediction") {
+  const map = {};
+  alerts.forEach((a) => {
+    const type = (a[key] || "Other").toUpperCase();
+    map[type] = (map[type] || 0) + 1;
+  });
+  return Object.entries(map).map(([name, value]) => ({ name, value }));
+}
 
-const DonutChartAlerts = () => {
+const DonutChartAlerts = ({ alerts = [] }) => {
   const theme = useTheme();
 
-  const option = useMemo(() => {
-    return {
+  const data = useMemo(() => groupByType(alerts, "prediction"), [alerts]);
+
+  const option = useMemo(
+    () => ({
       backgroundColor: theme.palette.background.paper,
       tooltip: {
         trigger: "item",
@@ -24,7 +27,7 @@ const DonutChartAlerts = () => {
         top: "5%",
         left: "center",
         textStyle: { color: theme.palette.text.primary },
-        data: sampleAlertTypes.map((item) => item.name),
+        data: data.map((item) => item.name),
       },
       series: [
         {
@@ -34,7 +37,7 @@ const DonutChartAlerts = () => {
           avoidLabelOverlap: false,
           center: ["50%", "55%"],
           itemStyle: {
-            borderRadius: 10, // bo góc cho từng múi
+            borderRadius: 10,
             borderColor: theme.palette.background.paper,
             borderWidth: 2,
           },
@@ -50,10 +53,8 @@ const DonutChartAlerts = () => {
               color: theme.palette.text.primary,
             },
           },
-          labelLine: {
-            show: false,
-          },
-          data: sampleAlertTypes,
+          labelLine: { show: false },
+          data,
         },
       ],
       color: [
@@ -63,8 +64,9 @@ const DonutChartAlerts = () => {
         theme.palette.info.main,
         theme.palette.error.main,
       ],
-    };
-  }, [theme]);
+    }),
+    [theme, data]
+  );
 
   return (
     <ReactECharts option={option} style={{ height: 280, width: "100%" }} />
