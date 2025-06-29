@@ -20,8 +20,9 @@ import {
   Paper,
   Pagination,
   Tooltip,
-  InputAdornment,
   IconButton,
+  LinearProgress,
+  CircularProgress,
 } from "@mui/material";
 import { Search as SearchIcon, Clear as ClearIcon } from "@mui/icons-material";
 import DonutChartAlerts from "../components/charts/DonutChartAlerts";
@@ -31,7 +32,41 @@ import { GetAlertFromAllUser } from "../services/AIModel/GetAlertFromAlluser";
 const severityOptions = ["All", "HIGH", "MEDIUM", "LOW"];
 const typeOptions = ["All", "FRAUDULENT", "NORMAL"];
 const ROWS_PER_PAGE = 10;
-const CHART_FETCH_LIMIT = 1000;
+const PAGE_SIZE_FETCH = 100;
+
+async function fetchAllAlerts(limitPerPage = 100, setProgress) {
+  let allAlerts = [];
+  let totalPages = 1;
+  try {
+    const firstRes = await GetAlertFromAllUser({
+      page: 1,
+      limit: limitPerPage,
+    });
+    allAlerts = firstRes.alerts || [];
+    totalPages = firstRes.pagination?.total_pages || 1;
+    if (setProgress) setProgress({ value: 1, total: totalPages });
+
+    const chunkSize = 10;
+    let pageArr = [];
+    for (let p = 2; p <= totalPages; p++) pageArr.push(p);
+    for (let i = 0; i < pageArr.length; i += chunkSize) {
+      const chunk = pageArr.slice(i, i + chunkSize);
+      const results = await Promise.all(
+        chunk.map((pageNum) =>
+          GetAlertFromAllUser({ page: pageNum, limit: limitPerPage })
+        )
+      );
+      results.forEach((res) => {
+        if (Array.isArray(res.alerts)) allAlerts.push(...res.alerts);
+      });
+      if (setProgress)
+        setProgress({ value: 1 + i + chunk.length, total: totalPages });
+    }
+  } catch (err) {
+    console.error("Error fetch all alerts", err);
+  }
+  return allAlerts;
+}
 
 const AlertsPage = () => {
   const theme = useTheme();
@@ -40,12 +75,11 @@ const AlertsPage = () => {
   const [filterSeverity, setFilterSeverity] = useState("All");
   const [filterType, setFilterType] = useState("All");
   const [filterWallet, setFilterWallet] = useState("");
-  const [alertsTable, setAlertsTable] = useState([]);
   const [alertsAll, setAlertsAll] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
+  const [progress, setProgress] = useState(null);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const paramAddress = searchParams.get("address");
@@ -55,42 +89,36 @@ const AlertsPage = () => {
     }
   }, [searchParams]);
 
+  // Fetch ALL alerts từ ALL pages
   useEffect(() => {
-    async function fetchAlerts() {
+    let cancelled = false;
+    async function fetchAll() {
       setLoading(true);
       setFetchError("");
+      setProgress({ value: 0, total: 1 });
       try {
-        const res = await GetAlertFromAllUser({ page, limit: ROWS_PER_PAGE });
-        setAlertsTable(res.alerts || []);
-        setTotalPages(res.pagination?.total_pages || 1);
-      } catch (err) {
-        setAlertsTable([]);
-        setFetchError("Failed to load alerts!");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (!filterWallet) fetchAlerts();
-  }, [page, filterWallet]);
-
-  useEffect(() => {
-    async function fetchAll() {
-      try {
-        const res = await GetAlertFromAllUser({
-          page: 1,
-          limit: CHART_FETCH_LIMIT,
+        const all = await fetchAllAlerts(PAGE_SIZE_FETCH, (prog) => {
+          if (!cancelled) setProgress(prog);
         });
-        setAlertsAll(res.alerts || []);
+        if (!cancelled) setAlertsAll(all);
       } catch (err) {
+        if (!cancelled) setFetchError("Failed to fetch all alerts.");
         setAlertsAll([]);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+          setProgress(null);
+        }
       }
     }
     fetchAll();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const filteredAlerts = useMemo(() => {
-    let data = filterWallet ? alertsAll : alertsTable;
+    let data = alertsAll;
     if (!Array.isArray(data)) return [];
     return data.filter((alert) => {
       let ok = true;
@@ -106,11 +134,17 @@ const AlertsPage = () => {
             .includes(filterWallet.toLowerCase());
       return ok;
     });
-  }, [alertsTable, alertsAll, filterSeverity, filterType, filterWallet]);
+  }, [alertsAll, filterSeverity, filterType, filterWallet]);
+
+  const totalPages = Math.ceil(filteredAlerts.length / ROWS_PER_PAGE);
+  const paginatedAlerts = useMemo(
+    () =>
+      filteredAlerts.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE),
+    [filteredAlerts, page]
+  );
 
   const handlePageChange = (event, value) => setPage(value);
 
-  // Xử lý RESET filter + search
   const handleReset = () => {
     setFilterSeverity("All");
     setFilterType("All");
@@ -325,6 +359,23 @@ const AlertsPage = () => {
           </Card>
         </Box>
 
+        {/* LOADING toàn bộ pages */}
+        {progress && (
+          <Box sx={{ mt: 3, mb: 1, width: "100%", textAlign: "center" }}>
+            <LinearProgress
+              variant="determinate"
+              value={Math.min(100, (progress.value / progress.total) * 100)}
+              sx={{ height: 10, borderRadius: 3, mb: 1 }}
+            />
+            <Typography sx={{ fontWeight: 700 }}>
+              Loading alerts page {progress.value}/{progress.total}...
+            </Typography>
+            {progress.value === progress.total && (
+              <CircularProgress size={32} sx={{ mt: 2 }} />
+            )}
+          </Box>
+        )}
+
         {/* ALERTS TABLE */}
         <Box>
           <Box
@@ -402,14 +453,14 @@ const AlertsPage = () => {
                       <Typography color="error">{fetchError}</Typography>
                     </TableCell>
                   </TableRow>
-                ) : filteredAlerts.length === 0 ? (
+                ) : paginatedAlerts.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} align="center">
                       <Typography>No alerts found.</Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredAlerts.map((alert, idx) => (
+                  paginatedAlerts.map((alert, idx) => (
                     <TableRow
                       key={alert.id || idx}
                       sx={{
@@ -499,20 +550,18 @@ const AlertsPage = () => {
                 )}
               </TableBody>
             </Table>
-            {/* Pagination chỉ hiển thị khi không tìm kiếm ví */}
-            {!filterWallet && (
-              <Box sx={{ display: "flex", justifyContent: "flex-end", my: 2 }}>
-                <Pagination
-                  count={totalPages}
-                  page={page}
-                  onChange={handlePageChange}
-                  color="primary"
-                  shape="rounded"
-                  siblingCount={1}
-                  boundaryCount={1}
-                />
-              </Box>
-            )}
+            {/* Pagination client-side */}
+            <Box sx={{ display: "flex", justifyContent: "flex-end", my: 2 }}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+                shape="rounded"
+                siblingCount={1}
+                boundaryCount={1}
+              />
+            </Box>
           </Paper>
         </Box>
       </Box>

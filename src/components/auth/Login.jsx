@@ -1,17 +1,23 @@
 import React, { useState } from "react";
-
 import { useAuth } from "../../context/AuthContext";
 import { StyledWrapper } from "../../styles/LoginStyled";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { useNavigate } from "react-router-dom";
 
 const Login = ({ onSwitchToRegister, onLoginSuccess }) => {
   const { signin } = useAuth();
-
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -23,6 +29,8 @@ const Login = ({ onSwitchToRegister, onLoginSuccess }) => {
     try {
       await signin(form.email, form.password);
       onLoginSuccess?.();
+      navigate("/", { replace: true });
+      setTimeout(() => window.location.reload(), 100);
     } catch (err) {
       setError(err?.message || "Login failed");
     } finally {
@@ -60,16 +68,36 @@ const Login = ({ onSwitchToRegister, onLoginSuccess }) => {
           <span className="star" />
         </section>
 
-        <div className="input-container">
+        <div className="input-container" style={{ position: "relative" }}>
           <input
             className="input-pwd"
-            type="password"
+            type={showPassword ? "text" : "password"}
             name="password"
             placeholder="Enter your passphrase"
             value={form.password}
             onChange={handleChange}
             required
+            style={{ paddingRight: 40 }}
           />
+          <IconButton
+            onClick={() => setShowPassword((v) => !v)}
+            tabIndex={-1}
+            style={{
+              position: "absolute",
+              right: 6,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 2,
+              padding: 4,
+            }}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? (
+              <VisibilityOff sx={{ color: "#6b7280" }} />
+            ) : (
+              <Visibility sx={{ color: "#6b7280" }} />
+            )}
+          </IconButton>
         </div>
 
         {error && <p style={{ color: "red", marginTop: 8 }}>{error}</p>}

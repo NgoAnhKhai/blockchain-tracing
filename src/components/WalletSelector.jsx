@@ -47,7 +47,7 @@ export default function WalletSelector({ selected, onSelect }) {
         }
       } catch (err) {
         setWallets([]);
-        setError("Can not loading wallet");
+        setError("Default");
       } finally {
         if (isMounted) setLoading(false);
       }

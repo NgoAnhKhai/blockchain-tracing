@@ -14,9 +14,16 @@ import {
   TableBody,
   Chip,
   Fade,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from "@mui/material";
+import LockIcon from "@mui/icons-material/Lock";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { GetAlertsDetailUser } from "../services/AIModel/GetAlertsDetailUser";
+import { useAuth } from "../context/AuthContext";
 
 function formatNumberShort(n) {
   if (!n || isNaN(Number(n))) return n;
@@ -42,8 +49,32 @@ export default function RelatedAlertsTable({ walletId, navigate }) {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // LOGIN logic
+  const { user } = useAuth();
+  const isLoggedIn = !!user;
+
+  // Popup
+  const [openPopup, setOpenPopup] = useState(false);
+  const [timer, setTimer] = useState(null);
+
+  // Open popup and auto-close
+  const handleLockClick = () => {
+    setOpenPopup(true);
+    // Reset timer if any
+    if (timer) clearTimeout(timer);
+    const t = setTimeout(() => setOpenPopup(false), 3000);
+    setTimer(t);
+  };
+  // Clean timer on unmount or close
   useEffect(() => {
-    if (!walletId) return;
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+    // eslint-disable-next-line
+  }, [timer]);
+
+  useEffect(() => {
+    if (!walletId || !isLoggedIn) return;
     setLoading(true);
     (async () => {
       try {
@@ -55,7 +86,7 @@ export default function RelatedAlertsTable({ walletId, navigate }) {
         setLoading(false);
       }
     })();
-  }, [walletId]);
+  }, [walletId, isLoggedIn]);
 
   const AlertsTableUI = () =>
     alerts && alerts.length ? (
@@ -148,6 +179,7 @@ export default function RelatedAlertsTable({ walletId, navigate }) {
         flex: 1,
         backgroundColor: "background.paper",
         minWidth: 320,
+        height: "40vh",
         p: 0,
         boxShadow: "0 2px 18px #2b174322",
         borderRadius: 4,
@@ -155,7 +187,14 @@ export default function RelatedAlertsTable({ walletId, navigate }) {
         position: "relative",
       }}
     >
-      <CardContent sx={{ p: 2 }}>
+      <CardContent
+        sx={{
+          p: 2,
+          filter: !isLoggedIn ? "blur(5px)" : "none",
+          pointerEvents: !isLoggedIn ? "none" : "auto",
+          transition: "filter .2s",
+        }}
+      >
         <Box
           sx={{
             display: "flex",
@@ -167,7 +206,7 @@ export default function RelatedAlertsTable({ walletId, navigate }) {
           <Typography variant="h6" fontWeight={700}>
             Related Alerts
           </Typography>
-          {alerts.length === 7 && (
+          {alerts.length === 7 && isLoggedIn && (
             <Tooltip title="Show all alerts">
               <IconButton
                 size="small"
@@ -187,16 +226,80 @@ export default function RelatedAlertsTable({ walletId, navigate }) {
             </Tooltip>
           )}
         </Box>
-        {loading ? (
+        {loading && isLoggedIn ? (
           <Skeleton
             variant="rectangular"
             height={120}
             sx={{ borderRadius: 2 }}
           />
-        ) : (
+        ) : isLoggedIn ? (
           <AlertsTableUI />
+        ) : (
+          <Box sx={{ minHeight: 120 }} />
         )}
       </CardContent>
+
+      {/* Icon khoá + overlay nếu chưa login */}
+      {!isLoggedIn && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            zIndex: 6,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "auto",
+            userSelect: "none",
+            cursor: "pointer",
+            bgcolor: "rgba(24,14,34,0.22)",
+          }}
+          onClick={handleLockClick}
+        >
+          <LockIcon sx={{ fontSize: 48, color: "#b69af7", mb: 1 }} />
+          <Typography color="text.secondary" fontWeight={600}>
+            You need to login to view alerts
+          </Typography>
+        </Box>
+      )}
+
+      {/* Popup thông báo login */}
+      <Dialog
+        open={openPopup}
+        onClose={() => setOpenPopup(false)}
+        maxWidth="xs"
+        PaperProps={{
+          sx: { borderRadius: 3, p: 2, textAlign: "center" },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 800, color: "#b69af7" }}>
+          Login Required
+        </DialogTitle>
+        <DialogContent>
+          <Typography sx={{ color: "#9d83c6", mb: 1 }}>
+            You need to login to view alerts.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: "center" }}>
+          <Button
+            onClick={() => setOpenPopup(false)}
+            sx={{
+              bgcolor: "#b69af7",
+              color: "#fff",
+              px: 3,
+              fontWeight: 700,
+              borderRadius: 2,
+              "&:hover": { bgcolor: "#9e23c9" },
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Card>
   );
 }
